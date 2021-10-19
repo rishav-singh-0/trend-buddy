@@ -1,4 +1,7 @@
-numpy==1.21.2
-pandas==1.3.4
-python-dateutil==2.8.2
-ta==0.7.0
+numpy
+pandas
+TA-Lib
+python-decouple
+sqlalchemy
+python-binance
+websocket-client
