@@ -1,7 +1,12 @@
-import websocket, json, pprint, talib, numpy
+import websocket
+import json
+import pprint
+import talib
+import numpy
 from decouple import config
 from binance.client import Client
 from binance.enums import *
+
 
 SOCKET = "wss://stream.binance.com:9443/ws/ethusdt@kline_1m"
 
@@ -14,7 +19,8 @@ TRADE_QUANTITY = 0.05
 closes = []
 in_position = False
 
-client = Client(config('API_KEY'), config('API_SECRET'), tld='us')
+# client = Client(config('API_KEY'), config('API_SECRET'), tld='us')
+client = Client(config('API_KEY'), config('API_SECRET'))
 
 def order(side, quantity, symbol,order_type=ORDER_TYPE_MARKET):
     try:
@@ -48,13 +54,12 @@ def on_message(ws, message):
     if is_candle_closed:
         print("candle closed at {}".format(close))
         closes.append(float(close))
-        print("closes")
-        print(closes)
+        print("closes at",closes)
 
         if len(closes) > RSI_PERIOD:
             np_closes = numpy.array(closes)
             rsi = talib.RSI(np_closes, RSI_PERIOD)
-            print("all rsis calculated so far")
+            print("all rsis calculated so far:")
             print(rsi)
             last_rsi = rsi[-1]
             print("the current rsi is {}".format(last_rsi))
