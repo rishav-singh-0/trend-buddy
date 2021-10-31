@@ -1,3 +1,8 @@
-from django.shortcuts import render
+from django.shortcuts import render, HttpResponse
+from django.views import View
 
-# Create your views here.
+class ChartView(View):
+
+    def get(self, request, *args, **kwargs):
+        # return HttpResponse("Hello World!")
+        return render(request, 'home.html', {})

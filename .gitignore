@@ -3,6 +3,5 @@
 .vscode
 *.db
 *.sqlite3
-temp*
 
 __pycache__
