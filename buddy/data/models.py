@@ -1,7 +1,7 @@
 from django.db import models
 
 class Symbol(models.Model):
-    symbol = models.CharField(unique=True ,max_length=8)
+    symbol = models.CharField(unique=True ,max_length=15)
     
     def __str__(self):
         return self.symbol

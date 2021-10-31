@@ -19,7 +19,7 @@ min candle for a day
 
 
 VISUALISE
-integrate `lightweight chart` in j
+integrate `lightweight chart` in jinja2
 take data from db and make chart
 
 ANALYSIS
