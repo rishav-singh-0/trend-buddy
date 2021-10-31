@@ -13,7 +13,7 @@ get data from binance api
 store in sql
 connect websocket with database
 
-day candle for a year
+day candle for 400 days
 15 min candle for week
 min candle for a day
 
