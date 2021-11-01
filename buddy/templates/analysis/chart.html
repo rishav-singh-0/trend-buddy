@@ -8,7 +8,7 @@
 {% endblock body %}
 
 {% block end_js %}
-const chart = LightweightCharts.createChart(document.getElementById("chart"), { width: 600, height: 400 });
+const chart = LightweightCharts.createChart(document.getElementById("chart"), { width: 800, height: 500 });
 const candlestickSeries = chart.addCandlestickSeries();
 candlestickSeries.setData({{ data|safe }})
 {% endblock end_js %}
