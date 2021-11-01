@@ -4,12 +4,20 @@ from datetime import date, timedelta
 from django.views import View
 
 from data.models import Symbol, Candle
-from .populate import add_symbols, add_candle_1day
+from .populate import add_symbols, add_candle_1day, populate_1day
 
-from decouple import config
-from binance import Client
 
-client = Client(config('API_KEY'), config('API_SECRET'))
+class PopulateView(View):
+
+    def get(self, request, *args, **kwargs):
+        result = populate_1day()
+        # result = add_candle_1day('SOLBRL')
+        # result = add_symbols()
+        print(result)
+        if result:
+            return HttpResponse("Success !!")
+        return HttpResponse("Failure !!")
+
 
 class SymbolView(View):
     '''
@@ -23,15 +31,6 @@ class SymbolView(View):
         for item in symbols:
             processed_symbols.append({item.pk : item.symbol})
         return JsonResponse(processed_symbols, safe=False)
-
-
-class PopulateView(View):
-
-    def get(self, request, symbol, *args, **kwargs):
-        result = add_candle_1day(symbol)
-        if result:
-            return HttpResponse("Success !!")
-        return HttpResponse("Failure !!")
 
 
 class CandleView(View):
