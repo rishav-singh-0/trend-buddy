@@ -1,10 +1,10 @@
-import datetime
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 import json
 from datetime import date, timedelta
-
 from django.views import View
+
+from data.models import Symbol, Candle
 from .populate import add_symbols, add_candle_1day
 
 from decouple import config
@@ -25,3 +25,25 @@ class SymbolView(View):
         print(klines)
         
         return HttpResponse("Working!!")
+
+class CandleView(View):
+
+    def get(self, request, *args, **kwargs):
+
+        processed_candlesticks = []
+        symbol = Symbol.objects.get(symbol="BTCUSDT")
+        candles = Candle.objects.filter(symbol=symbol)
+        print(candles)
+        
+        for data in candles:
+            candlestick = { 
+                'time': data.time, 
+                'open': data.open, 
+                'high': data.high, 
+                'low': data.low, 
+                'close': data.close 
+            }
+            processed_candlesticks.append(candlestick)
+        # print(json.dumps(processed_candlesticks))
+            
+        return JsonResponse(processed_candlesticks, safe=False)
