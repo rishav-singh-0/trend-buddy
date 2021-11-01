@@ -4,6 +4,11 @@
 {% block body %}
 
 <div id="chart"></div>
-<script src="{% static 'js/chart.js' %}"></script>
 
-{% endblock %}
+{% endblock body %}
+
+{% block end_js %}
+const chart = LightweightCharts.createChart(document.getElementById("chart"), { width: 600, height: 400 });
+const candlestickSeries = chart.addCandlestickSeries();
+candlestickSeries.setData({{ data|safe }})
+{% endblock end_js %}

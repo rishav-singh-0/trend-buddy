@@ -1,8 +1,5 @@
-from os import error
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
-import json
-from django.core import serializers
 from datetime import date, timedelta
 from django.views import View
 
@@ -30,17 +27,11 @@ class SymbolView(View):
 
 class PopulateView(View):
 
-    def get(self, request, *args, **kwargs):
-        # add_candle_1day("BTCUSDT")
-        # Defining Timespan for candles
-        today = date.today()
-        time_span = today - timedelta(days=400)
-        
-        # API call to binence
-        klines = client.get_historical_klines("BTCUSDT", Client.KLINE_INTERVAL_1DAY, time_span.strftime("%b %d, %y"))
-        print(klines)
-        
-        return HttpResponse("Working!!")
+    def get(self, request, symbol, *args, **kwargs):
+        result = add_candle_1day(symbol)
+        if result:
+            return HttpResponse("Success !!")
+        return HttpResponse("Failure !!")
 
 
 class CandleView(View):
