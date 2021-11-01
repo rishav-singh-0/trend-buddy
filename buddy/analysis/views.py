@@ -12,7 +12,7 @@ class SymbolListView(View):
         # processed_symbols = serializers.serialize('json', symbols)
         processed_symbols = []
         for item in symbols:
-            processed_symbols.append({item.pk : item.symbol})
+            processed_symbols.append({'index':item.pk, 'symbol' : item.symbol})
         return render(request, 'analysis/index.html', {'symbols': processed_symbols})
 
 
@@ -35,3 +35,13 @@ class ChartView(View):
             processed_candlesticks.append(candlestick)
 
         return render(request, 'analysis/chart.html', {'data': processed_candlesticks})
+
+
+class SelectionFormView():
+    pass
+
+class AnalysisView(View):
+    
+    def get(self, request, *args, **kwargs):
+        
+        return render(request, 'analysis/analysis.html', {'data': ''})

@@ -7,10 +7,25 @@
 <div id="symbol">
 <table>
 
-{% for item in symbols %}
-<tr> {{ item }} </tr>
-{% endfor %}
 <table>
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">Symbols</th>
+      <th scope="col">Chart</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in symbols %}
+    <tr> 
+    <th scope="row">{{ item.index }}</th>
+    <td>{{ item.symbol }}</td>
+    <td><a href="{{ item.symbol }}">see details</href></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 </div>
 
 {% endblock body %}
