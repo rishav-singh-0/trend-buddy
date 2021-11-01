@@ -1,3 +1,4 @@
+from os import error
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 import json
@@ -41,18 +42,21 @@ class PopulateView(View):
         
         return HttpResponse("Working!!")
 
+
 class CandleView(View):
     '''
     Taking data from db and converting it to candlesticks
     '''
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request, symbol, *args, **kwargs):
 
-        processed_candlesticks = []
-        symbol = Symbol.objects.get(symbol="BTCUSDT")
-        candles = Candle.objects.filter(symbol=symbol)
-        print(candles)
+        try:
+            symbol = Symbol.objects.get(symbol=symbol)
+            candles = Candle.objects.filter(symbol=symbol)
+        except Exception as e:
+            return JsonResponse({'error': str(e)})
         
+        processed_candlesticks = []
         for data in candles:
             candlestick = { 
                 'time': data.time, 
@@ -62,6 +66,5 @@ class CandleView(View):
                 'close': data.close 
             }
             processed_candlesticks.append(candlestick)
-        # print(json.dumps(processed_candlesticks))
             
         return JsonResponse(processed_candlesticks, safe=False)

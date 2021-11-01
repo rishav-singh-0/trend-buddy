@@ -1,4 +1,3 @@
-from os import error
 from .models import Symbol, Candle
 from datetime import date, timedelta
 
@@ -45,7 +44,7 @@ def add_candle_1day(symbol):
         ]
         bulk_candles = Candle.objects.bulk_create(objs)
 
-    except error as e:
+    except Exception as e:
         print(e)
     
 if __name__=='__main__':
