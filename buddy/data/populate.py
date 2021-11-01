@@ -7,15 +7,19 @@ from binance import Client
 client = Client(config('API_KEY'), config('API_SECRET'))
 
 def add_symbols():
+    try:
+        tickers = client.get_all_tickers()
+        objs = [
+            Symbol(
+                symbol=item['symbol']
+            )
+            for item in tickers
+        ]
+        bulk_symbols = Symbol.objects.bulk_create(objs)
+        return bulk_symbols
 
-    tickers = client.get_all_tickers()
-    objs = [
-        Symbol(
-            symbol=item['symbol']
-        )
-        for item in tickers
-    ]
-    bulk_symbols = Symbol.objects.bulk_create(objs)
+    except Exception as e:
+        return str(e)
 
 def add_candle_1day(symbol):
     try:
@@ -43,9 +47,11 @@ def add_candle_1day(symbol):
             for item in klines
         ]
         bulk_candles = Candle.objects.bulk_create(objs)
+        return bulk_candles
 
     except Exception as e:
         print(e)
+        return False
     
 if __name__=='__main__':
     add_symbols()
