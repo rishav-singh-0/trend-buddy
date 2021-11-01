@@ -1,14 +1,16 @@
+
 {% extends "base.html" %}
 {% load static %}
 
 {% block body %}
 
-<div id="chart"></div>
+<div id="symbol">
+<table>
+
+{% for item in symbols %}
+<tr> {{ item }} </tr>
+{% endfor %}
+<table>
+</div>
 
 {% endblock body %}
-
-{% block end_js %}
-const chart = LightweightCharts.createChart(document.getElementById("chart"), { width: 600, height: 400 });
-const candlestickSeries = chart.addCandlestickSeries();
-candlestickSeries.setData({{ data|safe }})
-{% endblock end_js %}

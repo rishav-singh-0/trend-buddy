@@ -1,16 +1,28 @@
-from django.shortcuts import render, HttpResponse
+from django.shortcuts import render
 from django.views import View
 
 from data.models import Symbol, Candle
 
-class ChartView(View):
+
+class SymbolListView(View):
 
     def get(self, request, *args, **kwargs):
 
+        symbols = Symbol.objects.all()
+        # processed_symbols = serializers.serialize('json', symbols)
+        processed_symbols = []
+        for item in symbols:
+            processed_symbols.append({item.pk : item.symbol})
+        return render(request, 'analysis/index.html', {'symbols': processed_symbols})
+
+
+class ChartView(View):
+
+    def get(self, request, symbol, *args, **kwargs):
+
         processed_candlesticks = []
-        symbol = Symbol.objects.get(symbol="BTCUSDT")
+        symbol = Symbol.objects.get(symbol=symbol)
         candles = Candle.objects.filter(symbol=symbol)
-        print(candles)
         
         for data in candles:
             candlestick = { 
@@ -22,4 +34,4 @@ class ChartView(View):
             }
             processed_candlesticks.append(candlestick)
 
-        return render(request, 'analysis/index.html', {'data': processed_candlesticks})
+        return render(request, 'analysis/chart.html', {'data': processed_candlesticks})
