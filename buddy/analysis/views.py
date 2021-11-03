@@ -14,7 +14,7 @@ class SymbolListView(View):
         for favourite in request.user.favourites.all(): # likes is the related name used in models
             favourite_symbol.append(favourite.symbol_id)
         print('symbols:',favourite_symbol)
-        return render(request, 'analysis/index.html', {'symbols': symbols, 'favourites': favourite_symbol})
+        return render(request, 'analysis/all-symbols.html', {'symbols': symbols, 'favourites': favourite_symbol})
 
 
 class ChartView(View):
