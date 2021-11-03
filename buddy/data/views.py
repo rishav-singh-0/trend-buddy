@@ -10,10 +10,10 @@ from .populate import add_symbols, add_candle_1day, populate_1day
 class PopulateView(View):
 
     def get(self, request, *args, **kwargs):
-        result = populate_1day()
+        result = populate_1day(request.user)
         # result = add_candle_1day('SOLBRL')
         # result = add_symbols()
-        print(result)
+        # print(result)
         if result:
             return HttpResponse("Success !!")
         return HttpResponse("Failure !!")

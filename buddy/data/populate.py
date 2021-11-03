@@ -52,7 +52,6 @@ def add_candle_1day(symbol, previous_candles):
         unix_time_today = mktime(datetime.strptime(today.isoformat(), "%Y-%m-%d").timetuple())
         if latest_candle_time/1000 == unix_time_today:
             return []
-        print(symbol, unix_time_today, latest_candle_time)
 
         # API call to binence
         klines = client.get_historical_klines(symbol, Client.KLINE_INTERVAL_1DAY, time_span.strftime("%b %d, %y"))
@@ -85,17 +84,12 @@ def add_candle_1day(symbol, previous_candles):
         print(e)
         return False
 
-def populate_1day():
+def populate_1day(user):
     # updating symbols
     add_symbols()
 
-    symbols = Symbol.objects.all()
+    favourite_symbols = user.favourites.all()
     all_candles = Candle.objects.all()
-    new_candles = []
-    for item in symbols:
-        candles = add_candle_1day(item, all_candles.filter(symbol=item))
-        # new_candles.extend(candles)
-    return True
-
-if __name__=='__main__':
-    add_symbols()
+    for item in favourite_symbols:
+        candles = add_candle_1day(item.symbol_id, all_candles.filter(symbol=item.symbol_id))
+    return candles
