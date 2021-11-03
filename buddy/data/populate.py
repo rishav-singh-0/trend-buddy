@@ -1,5 +1,6 @@
 from .models import Symbol, Candle
-from datetime import date, timedelta
+from time import mktime
+from datetime import date, timedelta, datetime
 
 from decouple import config
 from binance import Client
@@ -28,14 +29,16 @@ def add_symbols():
         print(str(e))
         return False
 
-def add_candle_1day(symbol):
+def add_candle_1day(symbol, previous_candles):
     '''
-    Pass a symbol and get its 400 days back candlestick data
+    Pass a symbol and queryset of previous candles for same symbol
+    Checking latest date of candle from db and adding further days candle till present date
+    Returns its 400 days back candlestick data at max
+    Assuming that no data is missing from between two candles
     '''
+
     try:
         # Checking if Symbol exists in db
-        symbol = Symbol.objects.get(symbol=symbol)
-        previous_candles = Candle.objects.filter(symbol=symbol)
         latest_candle_time = 0
         for item in previous_candles:
             if item.time > latest_candle_time:
@@ -45,12 +48,24 @@ def add_candle_1day(symbol):
         today = date.today()
         time_span = today - timedelta(days=400)
         
+        # returning if latest date is today
+        unix_time_today = mktime(datetime.strptime(today.isoformat(), "%Y-%m-%d").timetuple())
+        if latest_candle_time/1000 == unix_time_today:
+            return []
+        print(symbol, unix_time_today, latest_candle_time)
+
         # API call to binence
         klines = client.get_historical_klines(symbol, Client.KLINE_INTERVAL_1DAY, time_span.strftime("%b %d, %y"))
         
         # Adding candles all at ones
         new_klines = []
         for item in reversed(klines):
+
+            check_time = item[0]
+            if check_time <= latest_candle_time:
+                break
+
+            # adding only new symbols in db
             candle = Candle(
                 symbol=symbol,
                 time=item[0],
@@ -60,13 +75,9 @@ def add_candle_1day(symbol):
                 close=item[4],
                 volume=item[5]
             )
-            
-            # adding only new symbols in db
-            check_time = item[0]
-            if check_time > latest_candle_time:
-                new_klines.append(candle)
-            else:
-                return new_klines
+            new_klines.append(candle)
+
+        Candle.objects.bulk_create(new_klines)
         return new_klines
             
 
@@ -79,11 +90,12 @@ def populate_1day():
     add_symbols()
 
     symbols = Symbol.objects.all()
+    all_candles = Candle.objects.all()
     new_candles = []
     for item in symbols:
-        new_candles.extend(add_candle_1day(item))
-        print(f"Added {item}")
-    Candle.objects.bulk_create(new_candles)
+        candles = add_candle_1day(item, all_candles.filter(symbol=item))
+        # new_candles.extend(candles)
+    return True
 
 if __name__=='__main__':
     add_symbols()
