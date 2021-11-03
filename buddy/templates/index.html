@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 {% load static %}
 
@@ -27,7 +26,7 @@
         {{ item.favourites.count }}
       </td>
       <td class="favourite">
-        <button onclick="favouriteSymbol(this)" id="{{ item.pk }}" > {% if item in favourites %} Remove {% else %} Add {% endif %} </button> 
+        <button onclick="favouriteSymbol(this)" id="{{ item.pk }}" > {% if item in symbols %} Remove {% else %} Add {% endif %} </button> 
       </td>
     </tr>
     {% endfor %}
