@@ -3,7 +3,7 @@ from django.http import HttpResponse, JsonResponse
 from datetime import date, timedelta
 from django.views import View
 
-from data.models import Symbol, Candle
+from data.models import Favourite, Symbol, Candle
 from .populate import add_symbols, add_candle_1day, populate_1day
 
 
@@ -32,6 +32,20 @@ class SymbolView(View):
             processed_symbols.append({item.pk : item.symbol})
         return JsonResponse(processed_symbols, safe=False)
 
+
+class FavouriteView(View):
+    
+    def post(self, request, *args, **kwargs):
+        symbol_id = request.POST['symbol_id']
+        symbol = Symbol.objects.get(pk = symbol_id)
+        favourite = True
+
+        like_object, created = Favourite.objects.get_or_create(user_id = request.user, symbol_id = symbol)
+        if not created:
+            like_object.delete() # the user already favourited this symbol before
+            favourite = False
+        
+        return JsonResponse({'favourite':favourite})
 
 class CandleView(View):
     '''

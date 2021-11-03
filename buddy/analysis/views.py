@@ -9,11 +9,12 @@ class SymbolListView(View):
     def get(self, request, *args, **kwargs):
 
         symbols = Symbol.objects.all()
-        # processed_symbols = serializers.serialize('json', symbols)
-        processed_symbols = []
-        for item in symbols:
-            processed_symbols.append({'index':item.pk, 'symbol' : item.symbol})
-        return render(request, 'analysis/index.html', {'symbols': processed_symbols})
+        favourite_symbol = []
+
+        for favourite in request.user.favourites.all(): # likes is the related name used in models
+            favourite_symbol.append(favourite.symbol_id)
+        print('symbols:',favourite_symbol)
+        return render(request, 'analysis/index.html', {'symbols': symbols, 'favourites': favourite_symbol})
 
 
 class ChartView(View):
