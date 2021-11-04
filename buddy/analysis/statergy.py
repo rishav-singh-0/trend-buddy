@@ -1,14 +1,20 @@
-import numpy
+import numpy as np
 import talib
 
 # Momentum Analysis
 
 def rsi(candle):
-    rsi = talib.RIS(candle.close, timeperiod=14)
+    close = [ item.close for item in candle ]
+    # date = [ item.time*0.00001 for item in candle ]
+    close = np.array(close[-32:])
+    # date = np.array(date[-32:])
+    # print(close)
+    # print(date)
+    return talib.RSI(close, timeperiod=14)
 
 def macd(candle):
     macd, macdsignal, macdhist = talib.MACD(candle.close, fastperiod=12, slowperiod=26, signalperiod=9)
-    
+
 
 # Patterns
 

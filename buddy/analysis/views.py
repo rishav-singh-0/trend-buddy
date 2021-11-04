@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.views import View
 
 from data.models import Symbol, Candle
+from .statergy import rsi
 
 
 class DashboardView(View):
@@ -11,6 +12,11 @@ class DashboardView(View):
         favourite_symbols = []
         for favourite in request.user.favourites.all(): # likes is the related name used in models
             favourite_symbols.append(favourite.symbol_id)
+        
+        for symbol in favourite_symbols:
+            candle = Candle.objects.filter()
+            rsi_value = rsi(candle)
+            print(rsi_value)
 
         return render(request, 'index.html', {'symbols': favourite_symbols})
 
