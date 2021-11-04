@@ -11,5 +11,15 @@
 ## Analysis
 
 - Get data from `data` app according to user's selection
-- Show candle chart based on this data
-- 
+- Show candlestick chart from TradingView widget
+- Select favourite symbols from all available symbols
+- Use `TA-Lib` for technical analysis
+
+### Remaining
+- Generate latest statergies' value (eg. rsi, macd, etc.) and show it in same table
+
+## Bot
+
+- Take data from binance websocket
+- Automate using RQ-Worker
+- Take statergies and from analysis app and generate buy or sell calls

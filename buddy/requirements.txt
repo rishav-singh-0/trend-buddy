@@ -6,3 +6,4 @@ django>=3.2.8
 djangorestframework
 python-binance
 TA-Lib
+django-rq
