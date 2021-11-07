@@ -23,3 +23,12 @@
 - Take data from binance websocket
 - Automate using RQ-Worker
 - Take statergies and from analysis app and generate buy or sell calls
+
+## TODO
+
+- Generate Technical page like [TradingView technical page](https://in.tradingview.com/symbols/MATICUSDT/technicals/)
+- Portfolio for showing overall Profit and Loss
+    
+# Idea
+
+- Use trading view to send buy and sell calls
