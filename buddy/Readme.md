@@ -34,3 +34,4 @@
 - Use trading view to send buy and sell calls
 - Partial buy and sell
 - Pridict stoploss
+- Use multiple indecators and give them priority or waitage
