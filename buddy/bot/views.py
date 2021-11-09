@@ -7,7 +7,7 @@ class BotView(View):
     
     def get(self, request, *args, **kwargs):
         bot = Bot('BTCUSDT')
-        bot.main()
+        bot.start()
         return HttpResponse("Printing on console")
         # return render(request, 'index.html', {'symbols': ''})
 

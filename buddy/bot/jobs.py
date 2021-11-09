@@ -1,5 +1,5 @@
 from data.models import Symbol, Candle
-from analysis.statergy import macd, rsi
+from analysis.statergy import Statergy
 
 import websocket, json, pprint
 
@@ -7,15 +7,12 @@ from decouple import config
 from binance.client import Client
 from binance.enums import *
 
-global symbol, candle_list
-
-
-candle_list = []
 
 class Bot():
     def __init__(self, symbol):
         self.symbol = Symbol.objects.get(symbol=symbol)
         self.socket = f"wss://stream.binance.com:9443/ws/{self.symbol.symbol.lower()}@kline_1m"
+        self.candle_list = []
         
     def order(side, quantity, symbol,order_type=ORDER_TYPE_MARKET):
         try:
@@ -60,14 +57,16 @@ class Bot():
             # candle.save()
 
             print(f"candle closed at {candle.close}")
-            candle_list.append(candle)
-            print(len(candle_list))
-            # macd(candle_list)
-            if len(candle_list) > 14:
-                rsi(candle_list[-15:], 14, 70, 30)
+            self.candle_list.append(candle)
+            print('No. of candles: ',len(self.candle_list))
+
+            if len(self.candle_list) > 14:
+                statergy = Statergy(self.candle_list)
+                statergy.rsi(14, 70, 30)
+                statergy.macd()
 
 
-    def main(self):
+    def start(self):
         ws = websocket.WebSocketApp(
                 self.socket, 
                 on_open=self.on_open, 
