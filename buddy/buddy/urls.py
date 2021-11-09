@@ -23,6 +23,7 @@ urlpatterns = [
     path('django-rq/', include('django_rq.urls')),
     path('', include('analysis.urls')),
     path('data/', include('data.urls')),
+    path('bot/', include('bot.urls')),
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
