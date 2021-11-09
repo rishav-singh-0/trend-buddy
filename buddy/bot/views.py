@@ -1,3 +1,13 @@
-from django.shortcuts import render
+from django.shortcuts import render, HttpResponse
+from django.views import View
 
-# Create your views here.
+from .jobs import Bot
+
+class BotView(View):
+    
+    def get(self, request, *args, **kwargs):
+        bot = Bot('BTCUSDT')
+        bot.main()
+        return HttpResponse("Printing on console")
+        # return render(request, 'index.html', {'symbols': ''})
+
