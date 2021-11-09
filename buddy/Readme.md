@@ -32,3 +32,5 @@
 # Idea
 
 - Use trading view to send buy and sell calls
+- Partial buy and sell
+- Pridict stoploss
