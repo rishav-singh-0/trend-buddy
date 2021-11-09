@@ -6,18 +6,15 @@ class Statergy():
 
         # converting list of candles into indevidual arrays
         self.opens, self.highs, self.lows, self.closes = np.array([]), np.array([]), np.array([]), np.array([])
-        for candle in self.candles:
-            np.append(self.opens, candle.open)
-            np.append(self.highs, candle.high)
-            np.append(self.lows, candle.low)
-            np.append(self.closes, candle.close)
-
-        # closes = [ item.close for item in self.candles ]
-        # self.closes = np.array(closes)
+        for candle in candles:
+            self.opens = np.append(self.opens, candle.open)
+            self.highs = np.append(self.highs, candle.high)
+            self.lows = np.append(self.lows, candle.low)
+            self.closes = np.append(self.closes, candle.close)
 
 
     # Momentum Analysis
-    def rsi(self, timeperiod, overbought, oversold):
+    def rsi(self, timeperiod=14, overbought=70, oversold=30):
         '''
         RSI - Relative Strength Index
 
@@ -31,7 +28,10 @@ class Statergy():
             and False if RSI is in oversold region
         '''
 
+        # Generating RSI for given ranges
         self.rsi_list = talib.RSI(self.closes, timeperiod=timeperiod)
+
+        # Pridicting buy or sell call based on generated RSI
         latest_rsi = self.rsi_list[-1]
         print(f"The current rsi is {latest_rsi}")
 
@@ -43,7 +43,7 @@ class Statergy():
             return True
 
 
-    def macd(self):
+    def macd(self, fastperiod=12, slowperiod=26, signalperiod=9):
         '''
         MACD - Moving Averages Convergence Divergence
 
@@ -58,7 +58,13 @@ class Statergy():
             and False if RSI is in oversold region
         '''
 
-        self.macd_list, self.macdsignal, self.macdhist = talib.MACD(self.closes, fastperiod=12, slowperiod=26, signalperiod=9)
+        self.macd_list, self.macdsignal, self.macdhist = talib.MACD(
+            self.closes, 
+            fastperiod=fastperiod, 
+            slowperiod=slowperiod, 
+            signalperiod=signalperiod
+        )
+
         print('macdhist:\n',self.macdhist)
         if self.macdhist[-1] > 0:
             return True
