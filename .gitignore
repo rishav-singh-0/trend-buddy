@@ -4,4 +4,6 @@
 *.db
 *.sqlite3
 
+# python environment
 __pycache__
+.venv/
