@@ -9,12 +9,20 @@ from binance.enums import *
 
 
 class Bot():
+    '''
+    Subscribes to binance webhook to get realtime candlesticl data and generates
+    buy or sell calls based on `Statergies` discribed
+
+    Input:
+        - symbol
+    '''
+
     def __init__(self, symbol):
         self.symbol = Symbol.objects.get(symbol=symbol)
         self.socket = f"wss://stream.binance.com:9443/ws/{self.symbol.symbol.lower()}@kline_1m"
         self.candle_list = []
         
-    def order(side, quantity, symbol,order_type=ORDER_TYPE_MARKET):
+    def order(side, quantity, symbol, order_type=ORDER_TYPE_MARKET):
         try:
             print("sending order:", side)
             # order = client.create_order(symbol=symbol, side=side, type=order_type, quantity=quantity)
