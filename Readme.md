@@ -43,3 +43,18 @@ An OpenSource Trading bot
 - Partial buy and sell
 - Pridict stoploss
 - Use multiple indecators and give them priority or waitage
+
+# Installation
+
+Install TA-Lib
+
+- Using conda
+```
+conda install -c conda-forge ta-lib
+```
+- See [this](https://mrjbq7.github.io/ta-lib/install.html) if not using conda
+
+Python dependencies
+```
+pip install -r requirements.txt
+```
