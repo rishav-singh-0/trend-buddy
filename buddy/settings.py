@@ -103,10 +103,16 @@ RQ_QUEUES = {
         'HOST': 'localhost',
         'PORT': 6379,
         'DB': 0,
+    },
+    'day': {
+        'HOST': 'localhost',
+        'PORT': 6379,
+        'DB': 0,
+        'DEFAULT_TIMEOUT': 3600*24,
     }
 }
 
-RQ_EXCEPTION_HANDLERS = ['path.to.my.handler'] # If you need custom exception handlers
+# RQ_EXCEPTION_HANDLERS = ['path.to.my.handler'] # If you need custom exception handlers
 
 
 # Password validation
