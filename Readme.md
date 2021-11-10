@@ -32,6 +32,10 @@ An OpenSource Trading bot
 - Automate using RQ-Worker
 - Take statergies and from analysis app and generate buy or sell calls
 
+### Remaining
+
+- Add order history in db
+
 ## TODO
 
 - Generate Technical page like [TradingView technical page](https://in.tradingview.com/symbols/MATICUSDT/technicals/)
