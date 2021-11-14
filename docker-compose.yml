@@ -19,6 +19,6 @@ services:
   rq:
     image: redis:alpine
     command: >
-      sh -c "python3 manage.py rq-worker day"
+      sh -c "python manage.py rq-worker day"
     depends_on:
       - app
