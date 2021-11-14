@@ -7,3 +7,5 @@
 # python environment
 __pycache__
 .venv/
+
+ta-lib/
