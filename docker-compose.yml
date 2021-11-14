@@ -16,12 +16,9 @@ services:
     depends_on:
       - db
 
-  redis:
-    image: redis:alpine
-  
   rq:
+    image: redis:alpine
     command: >
       sh -c "python3 manage.py rq-worker day"
     depends_on:
-      - redis
       - app
