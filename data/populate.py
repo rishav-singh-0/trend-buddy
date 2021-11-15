@@ -87,6 +87,7 @@ def add_candle_1day(symbol, previous_candles):
 def populate_1day(user):
     # updating symbols
     add_symbols()
+    candles = []
 
     favourite_symbols = user.favourites.all()
     all_candles = Candle.objects.all()
