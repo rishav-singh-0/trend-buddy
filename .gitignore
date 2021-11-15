@@ -3,6 +3,7 @@
 .vscode
 *.db
 *.sqlite3
+migrations/
 
 # python environment
 __pycache__
