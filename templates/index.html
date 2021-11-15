@@ -21,7 +21,7 @@
     <tr> 
       <th scope="row">{{ item.pk }}</th>
       <td>{{ item.symbol }}</td>
-      <td><a href="symbols/{{ item.symbol }}">see details</href></td>
+      <td><a href="analysis/{{ item.symbol }}">see details</href></td>
       <td id="{{ item.pk }}" class="counter">
         {{ item.favourites.count }}
       </td>
