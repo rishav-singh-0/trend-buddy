@@ -10,15 +10,13 @@ services:
       - .:/app
     command: >
       sh -c "python3 manage.py migrate &&
+             python3 manage.py rqworker day &
              python3 manage.py runserver 0.0.0.0:8000"
     env_file:
       - ./.env
     depends_on:
-      - db
+      - redis
 
-  rq:
+  redis:
     image: redis:alpine
-    command: >
-      sh -c "python manage.py rq-worker day"
-    depends_on:
-      - app
+    restart: unless-stopped
