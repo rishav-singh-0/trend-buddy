@@ -7,7 +7,7 @@ from .bot import Bot
 class BotView(View):
     
     def get(self, request, symbol, *args, **kwargs):
-        bot = Bot(symbol)
+        bot = Bot(request, symbol)
         queue = django_rq.get_queue('day')
         queue.enqueue(bot.start)
         return HttpResponse(f"Printing on console {symbol}")

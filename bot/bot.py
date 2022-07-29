@@ -1,5 +1,6 @@
 from data.models import Symbol, Candle
 from analysis.statergy import Statergy
+from .models import Order
 
 import websocket, json, pprint
 
@@ -17,14 +18,23 @@ class Bot():
         - symbol
     '''
 
-    def __init__(self, symbol):
+    def __init__(self, request, symbol):
+        self.user = request.user
         self.symbol = Symbol.objects.get(symbol=symbol)
         self.socket = f"wss://stream.binance.com:9443/ws/{self.symbol.symbol.lower()}@kline_1m"
         self.candle_list = []
         
-    def order(side, quantity, symbol, order_type=ORDER_TYPE_MARKET):
+    def order(self, side, amount, price, order_type=ORDER_TYPE_MARKET):
         try:
             print("sending order:", side)
+            order = Order(
+                user_id = self.user,
+                symbol_id = self.symbol,
+                type = side,
+                amount = amount,
+                price = price,
+            )
+            order.save()
             # order = client.create_order(symbol=symbol, side=side, type=order_type, quantity=quantity)
             # print(order)
         except Exception as e:
@@ -34,24 +44,21 @@ class Bot():
         return True
 
     def on_open(self, ws):
-        print('opened connection')
+        print('Bot Started 🥳')
 
     def on_close(self, ws):
-        print('closed connection')
+        print('Bot Died ☠️')
 
     def on_message(self, ws, message):
-        global closes
         
-        # print('received message')
         json_message = json.loads(message)
-        # pprint.pprint(json_message)
-
         raw_candle = json_message['k']
-
         is_candle_closed = raw_candle['x']
+        # 0=Neutral, 1=Buy, -1=Sell
+        order_call = 0
 
-        # if True:
-        if is_candle_closed:
+        if True:
+        # if is_candle_closed:
 
             candle = Candle(
                 symbol=self.symbol,
@@ -70,8 +77,12 @@ class Bot():
 
             if len(self.candle_list) > 14:
                 statergy = Statergy(self.candle_list)
-                statergy.rsi(14, 70, 30)
-                statergy.macd()
+                rsi_call = statergy.rsi(14, 70, 30)
+                # macd_call = statergy.macd()
+                if rsi_call:
+                    order_call = 1
+            if order_call == 1:
+                self.order('BUY', 1, candle.close)
 
 
     def start(self):
