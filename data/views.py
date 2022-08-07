@@ -4,13 +4,13 @@ from datetime import date, timedelta
 from django.views import View
 
 from data.models import Favourite, Symbol, Candle
-from .populate import add_symbols, add_candle_1day, populate_1day
+from data.populate import CryptoPopulate
 
 
 class PopulateView(View):
-
     def get(self, request, *args, **kwargs):
-        result = populate_1day(request.user)
+        crypto = CryptoPopulate()
+        result = crypto.populate_1day(request.user)
         # result = add_candle_1day('SOLBRL')
         # result = add_symbols()
         # print(result)
