@@ -8,3 +8,6 @@ djangorestframework
 python-binance
 TA-Lib
 django-rq
+requests==2.27.1
+beautifulsoup4==4.11.1
+bs4==0.0.1
