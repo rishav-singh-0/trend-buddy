@@ -6,6 +6,13 @@ from datetime import date, timedelta, datetime
 from decouple import config
 from binance import Client
 
+# Stock
+from io import StringIO
+from time import sleep
+import requests
+import pandas as pd
+from  datetime import datetime, timedelta
+import bs4
 
 
 class CryptoPopulate():
@@ -99,4 +106,115 @@ class CryptoPopulate():
         for item in favourite_symbols:
             candles = self.add_candle_1day(item.symbol_id, all_candles.filter(symbol=item.symbol_id))
         return candles
+
+class NSEPopulate():
+    '''
+    input example: 
+        - 'TCS' 
+        - from_date='14-05-2015'
+        - to_date='14-05-2022'
+    output:
+        populate the database with 'TCS' symbol
+    '''
+    
+    session = None
+    symbol = None
+
+    def __init__(self, symbol, 
+                 from_date=(datetime(datetime.today().year - 1, datetime.today().month,datetime.today().day).strftime("%d-%m-%Y")),
+                 to_date=(datetime.today().strftime("%d-%m-%Y"))
+             ):
+        self.head = {
+            'user-agent': "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36"
+        }
+        self.session = requests.session()
+        self.symbol=symbol
+        self.from_date=from_date
+        self.to_date=to_date
+        self.df=pd.DataFrame()
+        # print("Preparing...")
+        
+    def get_history_data(self):
+        '''
+        Check if timeframe is over 2 years because NSE does not allow more
+        than 2 years at a time
+        '''
+        dataframe = pd.DataFrame()
+        
+        # calculating dates
+        from_date = datetime.strptime(self.from_date, "%d-%m-%Y")
+        to_date = datetime.strptime(self.to_date, "%d-%m-%Y")
+        diff = to_date.year - from_date.year
+        if diff<=2:
+            # single request works if date diffrence is less than 2 years
+            dataframe = self._get_equity_data(self.from_date, self.to_date)
+
+        else:
+            # fetch data in parts of 2 years segment
+            for i in range(0,int(diff/2)+1):
+                d = to_date.year - (i+1)*2
+                if d < from_date.year:
+                    d = from_date.year 
+
+                date1=datetime(d, from_date.month, from_date.day).strftime("%d-%m-%Y")
+                date2=datetime(to_date.year - i*2, to_date.month, to_date.day).strftime("%d-%m-%Y")
+                dataframe.append(self._get_equity_data(date1, date2))
+                
+                # adding some delay before making next request
+                sleep(0.2)
+        return dataframe
+
+    def _get_equity_data(self, from_date, to_date):
+        '''
+        Gets equity data from NSE in 2 years time segment
+        '''
+        print("Fetching...", from_date)
+        self.session.get("https://www.nseindia.com", headers=self.head)
+        self.session.get("https://www.nseindia.com/get-quotes/equity?symbol=" + self.symbol, headers=self.head)  # to save cookies
+        self.session.get("https://www.nseindia.com/api/historical/cm/equity?symbol="+self.symbol, headers=self.head)
+        url = "https://www.nseindia.com/api/historical/cm/equity?symbol=" + self.symbol + \
+            "&series=[%22EQ%22]&from=" + from_date + \
+            "&to=" + to_date + "&csv=true"
+        webdata = self.session.get(url=url, headers=self.head)
+        dataframe = pd.read_csv(StringIO(webdata.text[3:]))
+        self.filter_data(dataframe)
+        return self.df
+
+    def filter_data(self, dataframe):
+        dataframe['OPEN '] = dataframe['OPEN '].replace('\D', '', regex=True).astype(int)/100
+        dataframe['HIGH '] = dataframe['HIGH '].replace('\D', '', regex=True).astype(int)/100
+        dataframe['LOW '] = dataframe['LOW '].replace('\D', '', regex=True).astype(int)/100
+        dataframe['PREV. CLOSE '] = dataframe['PREV. CLOSE '].replace('\D', '', regex=True).astype(int)/100
+        dataframe['ltp '] = dataframe['ltp '].replace('\D', '', regex=True).astype(int)/100
+        dataframe['close '] = dataframe['close '].replace('\D', '', regex=True).astype(int)/100
+        dataframe['vwap '] = dataframe['vwap '].replace('\D', '', regex=True).astype(int)/100
+        dataframe['52W H '] = dataframe['52W H '].replace('\D', '', regex=True).astype(int)/100
+        dataframe['52W L '] = dataframe['52W L '].replace('\D', '', regex=True).astype(int)/100
+        dataframe['VALUE '] = dataframe['VALUE '].replace('\D', '', regex=True).astype(int)/100
+        self.df = dataframe
+        
+    def save_csv(self):
+        if not self.df.empty:
+            self.df.to_csv(self.symbol+'.csv',index=False)
+    
+    def save_candles(self):
+        for data in self.df:
+            print(data)
+        return self.df
+
+    def getId(self, name):
+        '''
+        Search atring and get its symbol name
+
+        input: 'tata motors'
+        output: TATAMOTORSEQN
+        '''
+        search_url = 'https://www.nseindia.com/api/search/autocomplete?q={}'
+        get_details = 'https://www.nseindia.com/api/quote-equity?symbol={}'
+        self.session.get('https://www.nseindia.com/', headers=self.head)
+        search_results = self.session.get(url=search_url.format(name), headers=self.head)
+        search_result = search_results.json()['symbols'][0]['symbol']
+
+        company_details = self.session.get(url=get_details.format(search_result), headers=self.head)
+        return company_details.json()['info']['identifier']
 
