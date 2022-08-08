@@ -4,10 +4,10 @@ from datetime import date, timedelta
 from django.views import View
 
 from data.models import Favourite, Symbol, Candle
-from data.populate import CryptoPopulate
+from data.populate import CryptoPopulate, NSEPopulate
 
 
-class PopulateView(View):
+class CryotoPopulateView(View):
     def get(self, request, *args, **kwargs):
         crypto = CryptoPopulate()
         result = crypto.populate_1day(request.user)
@@ -17,6 +17,13 @@ class PopulateView(View):
         if result:
             return HttpResponse("Success !!")
         return HttpResponse("Failure !!")
+
+class NSEPopulateView(View):
+    def get(self, request, *args, **kwargs):
+        stock = NSEPopulate('TCS', from_date='14-05-2020', to_date='14-05-2022')
+        result = stock.get_history_data()
+        result = stock.save_candles()
+        return HttpResponse(str(result))
 
 
 class SymbolView(View):
