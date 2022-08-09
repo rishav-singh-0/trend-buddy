@@ -2,8 +2,15 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models import UniqueConstraint
 
+class Exchange(models.Model):
+    exchange = models.CharField(unique=True ,max_length=15)
+    
+    def __str__(self):
+        return self.exchange
+
 class Symbol(models.Model):
     symbol = models.CharField(unique=True ,max_length=15)
+    exchange = models.ForeignKey(Exchange, on_delete=models.CASCADE)
     
     def __str__(self):
         return self.symbol
