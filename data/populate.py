@@ -181,7 +181,14 @@ class NSEPopulate():
         self.filter_data(dataframe)
         return self.df
 
+    def _date_srt_to_unix(self, row):
+        # print(type(row))
+        date = datetime.strptime(row['Date '], '%d-%b-%Y').timestamp()
+        return int(date)
+
     def filter_data(self, dataframe):
+        # dataframe['Date '] = dataframe.apply(self._date_srt_to_unix, axis=1)
+        dataframe['Date '] = dataframe['Date '].map(lambda x: datetime.strptime(x, '%d-%b-%Y').timestamp()).astype(int)
         dataframe['OPEN '] = dataframe['OPEN '].replace('\D', '', regex=True).astype(int)/100
         dataframe['HIGH '] = dataframe['HIGH '].replace('\D', '', regex=True).astype(int)/100
         dataframe['LOW '] = dataframe['LOW '].replace('\D', '', regex=True).astype(int)/100
@@ -192,6 +199,8 @@ class NSEPopulate():
         dataframe['52W H '] = dataframe['52W H '].replace('\D', '', regex=True).astype(int)/100
         dataframe['52W L '] = dataframe['52W L '].replace('\D', '', regex=True).astype(int)/100
         dataframe['VALUE '] = dataframe['VALUE '].replace('\D', '', regex=True).astype(int)/100
+        # print(dataframe.head())
+        # print(dataframe['Date '].dtype)
         self.df = dataframe
         
     def save_csv(self):
