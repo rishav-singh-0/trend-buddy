@@ -208,9 +208,28 @@ class NSEPopulate():
             self.df.to_csv(self.symbol+'.csv',index=False)
     
     def save_candles(self):
-        for data in self.df:
-            print(data)
-        return self.df
+        symbol = Symbol.objects.filter(symbol=self.symbol)[0]
+        prev_candles = Candle.objects.filter(symbol=symbol)
+        old_symbols = Symbol.objects.all()
+        candles = []
+        for index, data in self.df.iterrows():
+            candle = Candle(
+                symbol=symbol,
+                time=data['Date '],
+                open=data['OPEN '],
+                high=data['HIGH '],
+                low=data['LOW '],
+                close=data['close '],
+                volume=data['VOLUME '],
+                no_of_trades=data['No of trades ']
+            )
+            if(not prev_candles.filter(time=data['Date '])): 
+                candles.append(candle)
+        try:
+            Candle.objects.bulk_create(candles)
+        except Exception as e:
+            print(e)
+        return candles
 
     def getId(self, name):
         '''
