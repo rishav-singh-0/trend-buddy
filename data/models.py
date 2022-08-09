@@ -29,6 +29,10 @@ class Candle(models.Model):
     low = models.FloatField()
     close = models.FloatField()
     volume = models.FloatField()
+    no_of_trades = models.IntegerField()
+
+    class Meta:
+        unique_together = ["symbol", "time"]
     
     def __str__(self):
         return f'{self.symbol}_{self.time}'
