@@ -84,7 +84,8 @@ class CryptoPopulate():
                     high=item[2],
                     low=item[3],
                     close=item[4],
-                    volume=item[5]
+                    volume=item[5],
+                    no_of_trades=item[8]
                 )
                 new_klines.append(candle)
 
