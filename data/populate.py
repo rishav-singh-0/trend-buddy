@@ -210,7 +210,7 @@ class NSEPopulate():
     def save_candles(self):
         symbol = Symbol.objects.filter(symbol=self.symbol)[0]
         prev_candles = Candle.objects.filter(symbol=symbol)
-        old_symbols = Symbol.objects.all()
+        # old_symbols = Symbol.objects.all()
         candles = []
         for index, data in self.df.iterrows():
             candle = Candle(
