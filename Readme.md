@@ -23,26 +23,35 @@ An OpenSource Trading bot
 - Use `TA-Lib` for technical analysis
 
 ###Remaining
-- Generate latest statergies' value (eg. rsi, macd, etc.) and show it in same table
+- Generate latest strategies' value (eg. rsi, macd, etc.) and show it in same
+  table
 
 ##Bot
 - Take data from binance websocket
 - Automate using RQ-Worker
-- Take statergies and from analysis app and generate buy or sell calls
+- Take strategies and from analysis app and generate buy or sell calls
 
 ###Remaining
 - Add order history in db
 
 ##TODO
 - Generate Technical page like [TradingView technical page](https://in.tradingview.com/symbols/MATICUSDT/technicals/)
-- Portfolio for showing overall Profit and Loss
     
 #Idea
 - Use trading view to send buy and sell calls
 - Partial buy and sell
 - Predict stoploss
 - Use multiple indicators and give them priority or waitage
-- Macro analysis for specific sectors like IT, electronics, pharma, consumer, bank, etc
+- Macro analysis for specific sectors like IT, electronics, pharma, consumer,
+  bank, etc
+
+##Import orders
+- Import csv files which are exported from brokers like Zerodha to populate the
+  orders table
+
+##Profit and Loss Chart
+- Portfolio for showing overall Profit and Loss
+- Daily candlestick chart for profit and loss
 
 ##Financial Calculator 
 - Sip calculator, select index or equity, select time duration, select amount
