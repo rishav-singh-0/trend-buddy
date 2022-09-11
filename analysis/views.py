@@ -16,8 +16,8 @@ class DashboardView(View):
         for symbol in favourite_symbols:
             candle = Candle.objects.filter()
             statergy = Statergy(candle)
-            rsi_value = statergy.rsi()
-            print(rsi_value)
+            # rsi_value = statergy.rsi()
+            # print(rsi_value)
 
         return render(request, 'index.html', {'symbols': favourite_symbols})
 
