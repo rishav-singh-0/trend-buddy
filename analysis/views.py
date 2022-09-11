@@ -37,5 +37,5 @@ class SymbolListView(View):
 class AnalysisView(View):
 
     def get(self, request, symbol, *args, **kwargs):
-
-        return render(request, 'analysis/analysis.html', {'symbol': symbol})
+        symbol = Symbol.objects.filter(symbol=symbol)
+        return render(request, 'analysis/analysis.html', {'symbol': symbol[0]})
