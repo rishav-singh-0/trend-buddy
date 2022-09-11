@@ -18,12 +18,30 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from rest_framework.permissions import AllowAny
+from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
+
+schema_view = get_schema_view(
+   openapi.Info(
+      title="Trend Buddy",
+      default_version='v1',
+      description="Test description",
+   ),
+   public=True,
+   permission_classes=[AllowAny],
+)
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('rq/', include('django_rq.urls')),
     path('', include('analysis.urls')),
     path('data/', include('data.urls')),
     path('bot/', include('bot.urls')),
+    path('api-auth/', include('rest_framework.urls')),
+    # path('doc(?P<format>\.json|\.yaml)', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    path('doc/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
