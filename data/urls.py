@@ -1,14 +1,14 @@
 from django.urls import include, path
 
-from data.models import Exchange
-from .views import ExchangeView, CandleView, NSEPopulateView, SymbolView, FavouriteView, CryotoPopulateView
+from .views import ExchangeView, CandleView, FileUploadAPIView, NSEPopulateView, SymbolView, FavouriteView, CryotoPopulateView
 from rest_framework import routers
 
 router = routers.DefaultRouter()
-router.register('exchange', ExchangeView, 'exchange')
-router.register('symbol', SymbolView, 'symbol')
-router.register('candle', CandleView, 'candle')
-router.register('favourite', FavouriteView, 'fovourite')
+router.register('exchange', ExchangeView, basename='exchange')
+router.register('symbol', SymbolView, basename='symbol')
+router.register('candle', CandleView, basename='candle')
+router.register('favourite', FavouriteView, basename='fovourite')
+router.register('file-upload', FileUploadAPIView, basename='order-upload')
 
 urlpatterns = [
     path('', include(router.urls)), 
