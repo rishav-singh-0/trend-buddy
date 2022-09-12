@@ -1,6 +1,6 @@
 from data.models import Symbol, Candle
 from analysis.statergy import Statergy
-from .models import Order
+from .models import Trade
 
 import websocket, json, pprint
 
@@ -27,7 +27,7 @@ class Bot():
     def order(self, side, amount, price, order_type=ORDER_TYPE_MARKET):
         try:
             print("sending order:", side)
-            order = Order(
+            order = Trade(
                 user_id = self.user,
                 symbol_id = self.symbol,
                 type = side,

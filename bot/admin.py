@@ -1,5 +1,5 @@
 from django.contrib import admin
-from bot.models import Order
+from bot.models import Trade
 
 # Register your models here.
-admin.site.register(Order)
+admin.site.register(Trade)
