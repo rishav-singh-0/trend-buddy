@@ -1,10 +1,9 @@
-from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
-from datetime import date, timedelta
 from django.views import View
 
-from rest_framework import viewsets, generics, permissions
-from data.serializers import ExchangeSerializers, FavouriteSerializers, SymbolSerializers, CandleSerializers
+from rest_framework import viewsets, generics, permissions, views
+from bot.models import Trade
+from data.serializers import ExchangeSerializers, FavouriteSerializers, SymbolSerializers, CandleSerializers, FileUploadSerializer
 
 from data.models import Exchange, Favourite, Symbol, Candle
 from data.populate import CryptoPopulate, NSEPopulate
@@ -74,7 +73,7 @@ class FavouriteView(viewsets.ModelViewSet):
         
         return JsonResponse({'favourite':favourite})
 
-class CandleView(viewsets.ModelViewSet):
+class CandleView(viewsets.ModelViewSet, generics.ListAPIView):
     '''
     Taking data from db and converting it to candlesticks
     '''
@@ -83,25 +82,45 @@ class CandleView(viewsets.ModelViewSet):
     # filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
     permission_classes = [permissions.IsAuthenticated]
 
-    # def get_queryset(self):
-    #     queryset = Candle.objects.all()
-    #     try:
-    #         symbol = Symbol.objects.get(symbol=symbol)
-    #         candles = Candle.objects.filter(symbol=symbol)
-    #     except Exception as e:
-    #         return JsonResponse({'error': str(e)})
+    def get_queryset(self):
+        queryset = Candle.objects.all()
+        try:
+            symbol="TCS"
+            symbol = Symbol.objects.get(symbol=symbol)
+            candles = Candle.objects.filter(symbol=symbol)
+        except Exception as e:
+            return JsonResponse({'error': str(e)})
         
-    #     processed_candlesticks = []
-    #     for data in candles:
-    #         candlestick = { 
-    #             'time': data.time, 
-    #             'open': data.open, 
-    #             'high': data.high, 
-    #             'low': data.low, 
-    #             'close': data.close 
-    #         }
-    #         processed_candlesticks.append(candlestick)
+        processed_candlesticks = []
+        for data in candles:
+            candlestick = { 
+                'time': data.time, 
+                'open': data.open, 
+                'high': data.high, 
+                'low': data.low, 
+                'close': data.close,
+                'volume': data.volume,
+                'no_of_trades': data.no_of_trades
+            }
+            processed_candlesticks.append(candlestick)
             
-    #     # return JsonResponse(processed_candlesticks, safe=False)
-    #     return queryset
+        # return JsonResponse(processed_candlesticks, safe=False)
+        return queryset
     
+class FileUploadAPIView(viewsets.ModelViewSet, views.APIView):
+    serializer_class = FileUploadSerializer
+
+    def post(self, request, *args, **kwargs):
+        print(request)
+        # serializer = self.get_serializer(user=request.user, file=request.file)
+        # serializer.is_valid(raise_exception=True)
+        # file = serializer.validated_data['file']
+        # decoded_file = file.read().decode()
+        # # upload_products_csv.delay(decoded_file, request.user.pk)
+        # io_string = io.StringIO(decoded_file)
+        # reader = csv.reader(io_string)
+        # for row in reader:
+        #     print(row)
+        # # return Response(status=status.HTTP_204_NO_CONTENT)
+        return Trade.objects.all()
+    queryset = Trade.objects.all()
