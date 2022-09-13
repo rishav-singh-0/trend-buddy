@@ -1,4 +1,5 @@
-from .models import Symbol, Candle
+from data.models import Symbol, Candle
+from bot.models import Trade
 from time import mktime
 from datetime import date, timedelta, datetime
 
@@ -247,3 +248,38 @@ class NSEPopulate():
         company_details = self.session.get(url=get_details.format(search_result), headers=self.head)
         return company_details.json()['info']['identifier']
 
+class CsvTradePopulate():
+    def __init__(self, user):
+        self.user = user
+        self.csv_data = pd.DataFrame()
+        self.trade_list = []
+
+    def read_csv(self, path):
+        with open(path) as f:
+            self.csv_data = pd.read_csv(f)
+    
+    def format_zerodha(self):
+        # self.csv_data['order_execution_time'] = pd.to_datetime(self.csv_data['order_execution_time'], format="%Y-%m-%dT%H:%M:%S")
+        self.csv_data['order_execution_time'] = self.csv_data['order_execution_time'].map(lambda x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S').timestamp()).astype(int)
+        self.csv_data['trade_type'] = self.csv_data['trade_type'].str.upper()
+        print(self.csv_data)
+    
+    def add_trade(self):
+        for index, data in self.csv_data.iterrows():
+            print(data['symbol'])
+            trade = Trade(
+                user_id = self.user,
+                symbol_id = Symbol.objects.get(symbol=data['symbol']),
+                trade_type = data['trade_type'],
+                quantity = data['quantity'],
+                price = data['price'],
+                order_execution_time = data['order_execution_time']
+            )
+            self.trade_list.append(trade)
+
+    def save_trade(self):
+        try:
+            Trade.objects.bulk_create(self.trade_list)
+        except Exception as e:
+            print(e)
+        return self.trade_list
