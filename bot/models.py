@@ -14,7 +14,7 @@ class Trade(models.Model):
     trade_type = models.CharField(max_length=5, choices=CHOICE)
     quantity = models.FloatField()
     price = models.FloatField()
-    order_execution_time = models.DateField()
+    order_execution_time = models.IntegerField()
 
     def __str__(self):
-        return f"{self.user_id}_{self.symbol_id}@{self.order_execution_time.strftime('%Y_%m_%d-%H_%M_%S')}"
+        return f"{self.user_id}_{self.trade_type}_{self.symbol_id}@{self.order_execution_time}"
