@@ -127,7 +127,7 @@ class NSEPopulate():
                  to_date=(datetime.today().strftime("%d-%m-%Y"))
              ):
         self.head = {
-            'user-agent': "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36"
+            'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36'
         }
         self.session = requests.session()
         self.symbol=symbol
@@ -184,6 +184,7 @@ class NSEPopulate():
 
     def _date_srt_to_unix(self, row):
         # print(type(row))
+        # DATE format = "14-05-2022"
         date = datetime.strptime(row['Date '], '%d-%b-%Y').timestamp()
         return int(date)
 
