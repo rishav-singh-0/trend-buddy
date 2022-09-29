@@ -8,4 +8,5 @@ pandas>=1.4.3
 numpy>=1.23.2
 python-decouple>=3.6
 redis>=4.3.4
-websocket-client==1.4.0
+websocket-client>=1.4.0
+drf-yasg>=1.21.3
