@@ -1,4 +1,5 @@
 from django.http import HttpResponse, JsonResponse
+from rest_framework.response import Response
 from django.views import View
 
 from rest_framework import viewsets, generics, permissions, views
@@ -28,38 +29,38 @@ class NSEPopulateView(View):
         return HttpResponse(str(result))
 
 
-class ExchangeView(viewsets.ModelViewSet):
+class ExchangeView(views.APIView):
     '''
     Taking data from db about all the Exchanges available
     '''
-    queryset = Exchange.objects.all()
-    serializer_class = ExchangeSerializers
     permission_classes = [permissions.IsAuthenticated]
+    def get(self, request):
+        queryset = Exchange.objects.all()
+        serializer = ExchangeSerializers(queryset, many=True)
+        return Response(serializer.data)
 
-class SymbolView(viewsets.ModelViewSet):
+class SymbolView(views.APIView):
     '''
     Taking data from db about all the symbols available
     '''
-    queryset = Symbol.objects.all()
-    serializer_class = SymbolSerializers
     permission_classes = [permissions.IsAuthenticated]
     
     def get(self, request, *args, **kwargs):
-        symbols = Symbol.objects.all()
-        # processed_symbols = serializers.serialize('json', symbols)
-        processed_symbols = []
-        for item in symbols:
-            processed_symbols.append({item.pk : item.symbol})
-        return JsonResponse(processed_symbols, safe=False)
+        queryset = Symbol.objects.all()
+        serializer = SymbolSerializers(queryset, many=True)
+        return Response(serializer.data)
 
 
-class FavouriteView(viewsets.ModelViewSet):
+class FavouriteView(views.APIView):
     '''
     Taking data from db about all the Exchanges available
     '''
-    queryset = Favourite.objects.all()
-    serializer_class = FavouriteSerializers
     permission_classes = [permissions.IsAuthenticated]
+
+    def get():
+        queryset = Favourite.objects.all()
+        serializer = FavouriteSerializers(queryset, many=True)
+        return Response({'favourates': serializer.data})
 
     def post(self, request, *args, **kwargs):
         symbol_id = request.POST['symbol_id']
@@ -71,19 +72,18 @@ class FavouriteView(viewsets.ModelViewSet):
             like_object.delete() # the user already favourited this symbol before
             favourite = False
         
-        return JsonResponse({'favourite':favourite})
+        return Response(favourite)
 
-class CandleView(viewsets.ModelViewSet, generics.ListAPIView):
+class CandleView(views.APIView):
     '''
     Taking data from db and converting it to candlesticks
     '''
     queryset = Candle.objects.all()
-    serializer_class = CandleSerializers
+    serializer = CandleSerializers(queryset, many=True)
     # filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_queryset(self):
-        queryset = Candle.objects.all()
+    def get(self, request):
         try:
             symbol="TCS"
             symbol = Symbol.objects.get(symbol=symbol)
@@ -104,8 +104,7 @@ class CandleView(viewsets.ModelViewSet, generics.ListAPIView):
             }
             processed_candlesticks.append(candlestick)
             
-        # return JsonResponse(processed_candlesticks, safe=False)
-        return queryset
+        return Response(processed_candlesticks, safe=False)
     
 class FileUploadAPIView(viewsets.ModelViewSet, views.APIView):
     serializer_class = FileUploadSerializer
