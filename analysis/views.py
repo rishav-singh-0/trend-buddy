@@ -37,5 +37,8 @@ class SymbolListView(View):
 class AnalysisView(View):
 
     def get(self, request, symbol, *args, **kwargs):
-        symbol = Symbol.objects.filter(symbol=symbol)
-        return render(request, 'analysis/analysis.html', {'symbol': symbol[0]})
+        symbol = Symbol.objects.get(symbol=symbol)
+        if symbol.exchange.exchange == 'NSE':
+            symbol.exchange.exchange = 'BSE'
+        print(symbol.exchange.exchange)
+        return render(request, 'analysis/analysis.html', {'symbol': symbol})
