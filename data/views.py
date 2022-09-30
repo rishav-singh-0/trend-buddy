@@ -9,6 +9,9 @@ from data.serializers import ExchangeSerializers, FavouriteSerializers, SymbolSe
 from data.models import Exchange, Favourite, Symbol, Candle
 from data.populate import CryptoPopulate, NSEPopulate
 
+from django.core.serializers import json
+json_serializer = json.Serializer()
+
 
 class CryotoPopulateView(View):
     def get(self, request, *args, **kwargs):
@@ -21,12 +24,17 @@ class CryotoPopulateView(View):
             return HttpResponse("Success !!")
         return HttpResponse("Failure !!")
 
-class NSEPopulateView(View):
-    def get(self, request, *args, **kwargs):
-        stock = NSEPopulate('INFY', from_date='14-05-2020', to_date='14-05-2022')
+class NSEPopulateView(views.APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def post(self, request, format=None):
+        data = request.query_params
+        # print(data)
+        stock = NSEPopulate(data['symbol'], from_date=data['from_date'], to_date=data['to_date'])
         stock.get_history_data()
         result = stock.save_candles()
-        return HttpResponse(str(result))
+        result = json_serializer.serialize(result)
+        # print(result, type(result))
+        return Response(result)
 
 
 class ExchangeView(views.APIView):
