@@ -12,8 +12,6 @@ from io import StringIO
 from time import sleep
 import requests
 import pandas as pd
-from  datetime import datetime, timedelta
-import bs4
 
 
 class CryptoPopulate():
@@ -134,6 +132,8 @@ class NSEPopulate():
         self.from_date=from_date
         self.to_date=to_date
         self.df=pd.DataFrame()
+        
+        self.date_format = "%d-%m-%Y"
         # print("Preparing...")
         
     def get_history_data(self):
@@ -144,26 +144,30 @@ class NSEPopulate():
         dataframe = pd.DataFrame()
         
         # calculating dates
-        from_date = datetime.strptime(self.from_date, "%d-%m-%Y")
-        to_date = datetime.strptime(self.to_date, "%d-%m-%Y")
-        diff = to_date.year - from_date.year
-        if diff<=2:
-            # single request works if date diffrence is less than 2 years
-            dataframe = self._get_equity_data(self.from_date, self.to_date)
+        from_date = mktime(datetime.strptime(self.from_date, "%d-%m-%Y").timetuple())
+        to_date = mktime(datetime.strptime(self.to_date, "%d-%m-%Y").timetuple())
 
-        else:
-            # fetch data in parts of 2 years segment
-            for i in range(0,int(diff/2)+1):
-                d = to_date.year - (i+1)*2
-                if d < from_date.year:
-                    d = from_date.year 
+        # 2 years means 63072000 difference
+        max_time = 63072000
 
-                date1=datetime(d, from_date.month, from_date.day).strftime("%d-%m-%Y")
-                date2=datetime(to_date.year - i*2, to_date.month, to_date.day).strftime("%d-%m-%Y")
-                dataframe = pd.concat(dataframe, self._get_equity_data(date1, date2))
-                
-                # adding some delay before making next request
-                sleep(0.2)
+        dataframe = pd.DataFrame()
+        iter = list(range(int(to_date), int(from_date), -max_time))
+        for i in range(len(iter)-1):
+            date1 = datetime.fromtimestamp(iter[i]).strftime(self.date_format)
+            date2 = datetime.fromtimestamp(iter[i+1]).strftime(self.date_format)
+            dataframe = pd.concat([dataframe, self._get_equity_data(date1, date2)])
+            sleep(0.2)
+        
+        date1 = datetime.fromtimestamp(from_date).strftime(self.date_format)
+        date2 = datetime.fromtimestamp(iter[-1]).strftime(self.date_format)
+        dataframe = pd.concat([dataframe, self._get_equity_data(date1, date2)])
+        
+        # removing duplicates
+        dataframe = dataframe.drop_duplicates(subset=['Date '], keep='last')
+        
+        # finally storing in global dataframe
+        self.df = dataframe
+
         return dataframe
 
     def _get_equity_data(self, from_date, to_date):
@@ -178,11 +182,9 @@ class NSEPopulate():
             "&series=[%22EQ%22]&from=" + from_date + "&to=" + to_date + "&csv=true"
         webdata = self.session.get(url=url, headers=self.head)
         dataframe = pd.read_csv(StringIO(webdata.text[3:]))
-        self.filter_data(dataframe)
-        return self.df
+        return self.filter_data(dataframe)
 
     def _date_srt_to_unix(self, row):
-        # print(type(row))
         # DATE format = "14-05-2022"
         date = datetime.strptime(row['Date '], '%d-%b-%Y').timestamp()
         return int(date)
@@ -200,9 +202,7 @@ class NSEPopulate():
         dataframe['52W H '] = dataframe['52W H '].replace('\D', '', regex=True).astype(int)/100
         dataframe['52W L '] = dataframe['52W L '].replace('\D', '', regex=True).astype(int)/100
         dataframe['VALUE '] = dataframe['VALUE '].replace('\D', '', regex=True).astype(int)/100
-        # print(dataframe.head())
-        # print(dataframe['Date '].dtype)
-        self.df = dataframe
+        return dataframe
         
     def save_csv(self):
         if not self.df.empty:
@@ -213,7 +213,7 @@ class NSEPopulate():
         prev_candles = Candle.objects.filter(symbol=symbol)
         # old_symbols = Symbol.objects.all()
         candles = []
-        for index, data in self.df.iterrows():
+        for _, data in self.df.iterrows():
             candle = Candle(
                 symbol=symbol,
                 time=data['Date '],
