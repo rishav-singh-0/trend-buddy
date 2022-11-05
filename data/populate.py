@@ -160,7 +160,7 @@ class NSEPopulate():
 
                 date1=datetime(d, from_date.month, from_date.day).strftime("%d-%m-%Y")
                 date2=datetime(to_date.year - i*2, to_date.month, to_date.day).strftime("%d-%m-%Y")
-                dataframe.append(self._get_equity_data(date1, date2))
+                dataframe = pd.concat(dataframe, self._get_equity_data(date1, date2))
                 
                 # adding some delay before making next request
                 sleep(0.2)
@@ -173,10 +173,9 @@ class NSEPopulate():
         print("Fetching...", from_date)
         self.session.get("https://www.nseindia.com", headers=self.head)
         self.session.get("https://www.nseindia.com/get-quotes/equity?symbol=" + self.symbol, headers=self.head)  # to save cookies
-        self.session.get("https://www.nseindia.com/api/historical/cm/equity?symbol="+self.symbol, headers=self.head)
+        # session.get("https://www.nseindia.com/api/historical/cm/equity?symbol="+symbol, headers=head)
         url = "https://www.nseindia.com/api/historical/cm/equity?symbol=" + self.symbol + \
-            "&series=[%22EQ%22]&from=" + from_date + \
-            "&to=" + to_date + "&csv=true"
+            "&series=[%22EQ%22]&from=" + from_date + "&to=" + to_date + "&csv=true"
         webdata = self.session.get(url=url, headers=self.head)
         dataframe = pd.read_csv(StringIO(webdata.text[3:]))
         self.filter_data(dataframe)
