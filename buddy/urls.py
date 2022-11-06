@@ -37,6 +37,7 @@ urlpatterns = [
 
     # path('accounts', include('authentication.urls')),
     path('', include('authentication.urls')), # Auth routes - login / register
+    path('', include('ui.urls')),
     path('rq/', include('django_rq.urls')),
     path('analysis/', include('analysis.urls')),
     # path('', include('data.urls')),

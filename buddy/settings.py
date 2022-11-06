@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     # Custom
     'authentication',
+    'ui',
     'data',
     'analysis',
     'bot',
@@ -61,8 +62,6 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'buddy.urls'
 LOGIN_REDIRECT_URL = '/'
-LOGIN_URL = '/login'
-
 
 TEMPLATES = [
     {
