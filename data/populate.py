@@ -1,4 +1,4 @@
-from data.models import Symbol, Candle
+from data.models import Exchange, Symbol, Candle
 from bot.models import Trade
 from time import mktime
 from datetime import date, timedelta, datetime
@@ -248,6 +248,47 @@ class NSEPopulate():
         company_details = self.session.get(url=get_details.format(search_result), headers=self.head)
         return company_details.json()['info']['identifier']
 
+class NSEList():
+    session = None
+    def __init__(self):
+        self.head = {
+            'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36'
+        }
+        self.df = pd.DataFrame()
+        self.session = requests.session()
+    
+    def pull(self):
+        url = "https://www1.nseindia.com/products/content/equities/equities/eq_security.htm"
+        self.session.get(url, headers=self.head)
+        url_csv = "https://www1.nseindia.com/products/content/sec_bhavdata_full.csv"
+        webdata = self.session.get(url=url_csv, headers=self.head)
+        df = pd.read_csv(StringIO(webdata.text), delimiter=', ', on_bad_lines='skip', engine='python')
+        # print(df)
+        eq = df[df['SERIES']=='EQ']
+        # print(eq.size, df.size)
+        self.df = eq['SYMBOL']
+        return self.df
+    
+    def save_symbols(self):
+        '''remove repeted symbols'''
+        self.df = self.df.drop_duplicates()
+        print(type(self.df))
+        exchange = Exchange.objects.get(exchange='NSE')
+        prev_symbols = Symbol.objects.filter(exchange=exchange)
+        symbols = []
+        for data in self.df:
+            symbol = Symbol(
+                symbol=data,
+                exchange=exchange
+            )
+            if(not prev_symbols.filter(symbol=data)): 
+                symbols.append(symbol)
+        try:
+            Symbol.objects.bulk_create(symbols)
+        except Exception as e:
+            print(e)
+        return symbols
+        
 class CsvTradePopulate():
     def __init__(self, user):
         self.user = user

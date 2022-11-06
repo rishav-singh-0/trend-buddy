@@ -28,9 +28,11 @@ def getList():
     session.get(url, headers=head)
     url_csv = "https://www1.nseindia.com/products/content/sec_bhavdata_full.csv"
     webdata = session.get(url=url_csv, headers=head)
-    df = pd.read_csv(StringIO(webdata.text))
-    eq = df[df[' SERIES']==' EQ']
-    # print(eq.size, df.size)
+    # print(webdata.text[:200])
+    df = pd.read_csv(StringIO(webdata.text), delimiter=', ', on_bad_lines='skip')
+    print(df)
+    eq = df[df['SERIES']=='EQ']
+    print(eq.size, df.size)
     return eq['SYMBOL']
 
 
@@ -46,6 +48,6 @@ def niftyHistoryData(varient, from_date = ((datetime(datetime.today().year - 1, 
     return pd.read_csv(StringIO(soup.find('div', {'id': 'csvContentDiv'}).contents[0].replace(':','\n')))
 
 
-print(getHistoryData('SHREECEM',from_date='30-04-2020',to_date='30-04-2022'))
-# print(getList())
+# print(getHistoryData('SHREECEM',from_date='30-04-2020',to_date='30-04-2022'))
+print(getList())
 # print(niftyHistoryData('NIFTY 50'))

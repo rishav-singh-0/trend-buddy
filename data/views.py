@@ -7,7 +7,7 @@ from bot.models import Trade
 from data.serializers import ExchangeSerializers, FavouriteSerializers, SymbolSerializers, CandleSerializers, FileUploadSerializer
 
 from data.models import Exchange, Favourite, Symbol, Candle
-from data.populate import CryptoPopulate, NSEPopulate
+from data.populate import CryptoPopulate, NSEPopulate, NSEList
 
 from django.core.serializers import json
 json_serializer = json.Serializer()
@@ -26,6 +26,14 @@ class CryotoPopulateView(View):
 
 class NSEPopulateView(views.APIView):
     permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, format=None):
+        symbols_list = NSEList()
+        _ = symbols_list.pull()
+        new_symbols = symbols_list.save_symbols()
+        result = json_serializer.serialize(new_symbols)
+        return Response(result)
+
     def post(self, request, format=None):
         data = request.query_params
         # print(data)
@@ -114,10 +122,10 @@ class CandleView(views.APIView):
             
         return Response(processed_candlesticks, safe=False)
     
-class FileUploadAPIView(viewsets.ModelViewSet, views.APIView):
-    serializer_class = FileUploadSerializer
-
+class FileUploadAPIView(views.APIView):
+    permission_classes = [permissions.IsAuthenticated]
     def post(self, request, *args, **kwargs):
+        queryset = Trade.objects.all()
         print(request)
         # serializer = self.get_serializer(user=request.user, file=request.file)
         # serializer.is_valid(raise_exception=True)
@@ -129,5 +137,4 @@ class FileUploadAPIView(viewsets.ModelViewSet, views.APIView):
         # for row in reader:
         #     print(row)
         # # return Response(status=status.HTTP_204_NO_CONTENT)
-        return Trade.objects.all()
-    queryset = Trade.objects.all()
+        return Response()
