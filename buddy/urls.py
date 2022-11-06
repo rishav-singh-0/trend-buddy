@@ -38,12 +38,12 @@ urlpatterns = [
     # path('accounts', include('authentication.urls')),
     path('', include('authentication.urls')), # Auth routes - login / register
     path('', include('ui.urls')),
+    path('api/analysis/', include('analysis.urls')),
+    path('api/data/', include('data.urls')),
+    path('api/bot/', include('bot.urls')),
+
     path('rq/', include('django_rq.urls')),
-    path('analysis/', include('analysis.urls')),
-    # path('', include('data.urls')),
-    path('bot/', include('bot.urls')),
     path('api-auth/', include('rest_framework.urls')),
-    # path('doc(?P<format>\.json|\.yaml)', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('doc/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]
