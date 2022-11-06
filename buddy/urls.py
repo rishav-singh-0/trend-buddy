@@ -34,9 +34,12 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    # path('accounts', include('authentication.urls')),
+    path('', include('authentication.urls')), # Auth routes - login / register
     path('rq/', include('django_rq.urls')),
     path('analysis/', include('analysis.urls')),
-    path('', include('data.urls')),
+    # path('', include('data.urls')),
     path('bot/', include('bot.urls')),
     path('api-auth/', include('rest_framework.urls')),
     # path('doc(?P<format>\.json|\.yaml)', schema_view.without_ui(cache_timeout=0), name='schema-json'),
