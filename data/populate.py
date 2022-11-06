@@ -272,7 +272,6 @@ class NSEList():
     def save_symbols(self):
         '''remove repeted symbols'''
         self.df = self.df.drop_duplicates()
-        print(type(self.df))
         exchange = Exchange.objects.get(exchange='NSE')
         prev_symbols = Symbol.objects.filter(exchange=exchange)
         symbols = []

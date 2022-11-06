@@ -29,3 +29,24 @@ def populate_view(request):
 
     html_template = loader.get_template('home/populate.html')
     return HttpResponse(html_template.render(context, request))
+
+@login_required(login_url="/login/")
+def tables_view(request):
+    context = {'segment': 'tables'}
+
+    html_template = loader.get_template('home/tables.html')
+    return HttpResponse(html_template.render(context, request))
+
+@login_required(login_url="/login/")
+def billing_view(request):
+    context = {'segment': 'billing'}
+
+    html_template = loader.get_template('home/billing.html')
+    return HttpResponse(html_template.render(context, request))
+
+@login_required(login_url="/login/")
+def notifications_view(request):
+    context = {'segment': 'notifications'}
+
+    html_template = loader.get_template('home/notifications.html')
+    return HttpResponse(html_template.render(context, request))
