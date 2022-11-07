@@ -38,7 +38,6 @@ urlpatterns = [
     # path('accounts', include('authentication.urls')),
     path('', include('authentication.urls')), # Auth routes - login / register
     path('', include('ui.urls')),
-    path('api/analysis/', include('analysis.urls')),
     path('api/data/', include('data.urls')),
     path('api/bot/', include('bot.urls')),
 

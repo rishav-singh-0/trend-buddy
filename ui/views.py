@@ -33,7 +33,12 @@ def portfolio_view(request):
 
 @login_required(login_url="/login/")
 def analysis_view(request):
-    return render(request, 'home/analysis.html', {'data': ''})
+    symbols = Symbol.objects.all()
+    favourite_symbols = []
+
+    for favourite in request.user.favourites.all(): # likes is the related name used in models
+        favourite_symbols.append(favourite.symbol_id)
+    return render(request, 'home/analysis.html', {'symbols': symbols, 'favourites': favourite_symbols})
 
 @login_required(login_url="/login/")
 def analysis_symbol_view(request, symbol):
