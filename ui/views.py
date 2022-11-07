@@ -1,6 +1,4 @@
 from django.contrib.auth.decorators import login_required
-from django.template import loader
-from django.http import HttpResponse
 from django.shortcuts import render
 
 from data.models import Symbol, Candle
@@ -8,7 +6,8 @@ from analysis.statergy import Statergy
 
 @login_required(login_url="/login/")
 def dashboard_view(request):
-    return render(request, 'home/index.html')
+    context = {'segment': 'index'}
+    return render(request, 'home/index.html', context)
 
 def analysis(request):
     favourite_symbols = []
@@ -21,15 +20,13 @@ def analysis(request):
         # rsi_value = statergy.rsi()
         # print(rsi_value)
 
-    return render(request, 'home/index.html', {'symbols': favourite_symbols})
+    return render(request, 'home/index.html', {'segment': 'analysis', 'symbols': favourite_symbols})
 
 
 @login_required(login_url="/login/")
 def portfolio_view(request):
     context = {'segment': 'portfolio'}
-
-    html_template = loader.get_template('home/portfolio.html')
-    return HttpResponse(html_template.render(context, request))
+    return render(request, 'home/portfolio.html', context)
 
 @login_required(login_url="/login/")
 def analysis_view(request):
@@ -38,7 +35,8 @@ def analysis_view(request):
 
     for favourite in request.user.favourites.all(): # likes is the related name used in models
         favourite_symbols.append(favourite.symbol_id)
-    return render(request, 'home/analysis.html', {'symbols': symbols, 'favourites': favourite_symbols})
+    context = {'segment': 'analysis', 'symbols': symbols, 'favourites': favourite_symbols}
+    return render(request, 'home/analysis.html', context)
 
 @login_required(login_url="/login/")
 def analysis_symbol_view(request, symbol):
@@ -51,27 +49,19 @@ def analysis_symbol_view(request, symbol):
 @login_required(login_url="/login/")
 def populate_view(request):
     context = {'segment': 'populate'}
-
-    html_template = loader.get_template('home/populate.html')
-    return HttpResponse(html_template.render(context, request))
+    return render(request, 'home/populate.html', context)
 
 @login_required(login_url="/login/")
 def tables_view(request):
     context = {'segment': 'tables'}
-
-    html_template = loader.get_template('home/tables.html')
-    return HttpResponse(html_template.render(context, request))
+    return render(request, 'home/tables.html', context)
 
 @login_required(login_url="/login/")
 def billing_view(request):
     context = {'segment': 'billing'}
-
-    html_template = loader.get_template('home/billing.html')
-    return HttpResponse(html_template.render(context, request))
+    return render(request, 'home/billing.html', context)
 
 @login_required(login_url="/login/")
 def notifications_view(request):
     context = {'segment': 'notifications'}
-
-    html_template = loader.get_template('home/notifications.html')
-    return HttpResponse(html_template.render(context, request))
+    return render(request, 'home/notifications.html', context)
