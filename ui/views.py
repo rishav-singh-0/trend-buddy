@@ -3,6 +3,7 @@ from django.shortcuts import render
 from django.http import HttpResponseRedirect
 
 from data.models import Symbol, Candle
+from bot.models import Trade
 from analysis.statergy import Statergy
 from .forms import OrderForm
 from data.populate import CsvTradePopulate
@@ -48,14 +49,13 @@ def portfolio_view(request):
             trade_data.format_zerodha()
             trade_list = trade_data.save_trade()
         
-            # return trade_data.save_trade()[0]
-            # redirect to a new URL:
             return HttpResponseRedirect('/portfolio/')
 
     # if a GET (or any other method) we'll create a blank form
     else:
         form = OrderForm()
-    context = {'segment': 'portfolio', 'form': form}
+        trade_list = Trade.objects.all()
+    context = {'segment': 'portfolio', 'form': form, 'trade_list':trade_list}
     return render(request, 'home/portfolio.html', context)
 
 @login_required(login_url="/login/")
