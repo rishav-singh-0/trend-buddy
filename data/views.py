@@ -4,7 +4,7 @@ from django.views import View
 
 from rest_framework import viewsets, generics, permissions, views
 from bot.models import Trade
-from data.serializers import ExchangeSerializers, FavouriteSerializers, SymbolSerializers, CandleSerializers, FileUploadSerializer
+from data.serializers import ExchangeSerializers, FavouriteSerializers, SymbolSerializers, CandleSerializers
 
 from data.models import Exchange, Favourite, Symbol, Candle
 from data.populate import CryptoPopulate, NSEPopulate, NSEList
@@ -121,20 +121,3 @@ class CandleView(views.APIView):
             processed_candlesticks.append(candlestick)
             
         return Response(processed_candlesticks, safe=False)
-    
-class FileUploadAPIView(views.APIView):
-    permission_classes = [permissions.IsAuthenticated]
-    def post(self, request, *args, **kwargs):
-        queryset = Trade.objects.all()
-        print(request)
-        # serializer = self.get_serializer(user=request.user, file=request.file)
-        # serializer.is_valid(raise_exception=True)
-        # file = serializer.validated_data['file']
-        # decoded_file = file.read().decode()
-        # # upload_products_csv.delay(decoded_file, request.user.pk)
-        # io_string = io.StringIO(decoded_file)
-        # reader = csv.reader(io_string)
-        # for row in reader:
-        #     print(row)
-        # # return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response()
