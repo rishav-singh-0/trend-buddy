@@ -1213,20 +1213,14 @@
         vertLines: { color: "#344767" },
         horzLines: { color: "#344767" },
       },
+      // Setting the border color for the vertical axis
+      priceScale: { borderColor: "#7b809a4d" },
+
+      // Setting the border color for the horizontal axis
+      // Adjust the starting bar width (essentially the horizontal zoom)
+      timeScale: { borderColor: "#7b809a4d", barSpacing: 10 },
     }
   );
-
-  // Setting the border color for the vertical axis
-  chart.priceScale().applyOptions({
-    borderColor: "#7b809a4d",
-  });
-
-  // Setting the border color for the horizontal axis
-  // Adjust the starting bar width (essentially the horizontal zoom)
-  chart.timeScale().applyOptions({
-    borderColor: "#7b809a4d",
-    barSpacing: 10,
-  });
 
   // Get the current users primary locale
   const currentLocale = window.navigator.languages[0];
