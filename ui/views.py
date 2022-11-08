@@ -29,6 +29,11 @@ def portfolio_view(request):
     return render(request, 'home/portfolio.html', context)
 
 @login_required(login_url="/login/")
+def screener_view(request):
+    context = {'segment': 'screener'}
+    return render(request, 'home/screener.html', context)
+
+@login_required(login_url="/login/")
 def analysis_view(request):
     symbols = Symbol.objects.all()
     favourite_symbols = []
