@@ -10,7 +10,14 @@
   <div class="container-fluid py-4">
     <div class="row min-vh-80 h-100">
       <div class="col-12">
-        NEW CONTENT HERE
+        Portfolio
+        {% comment %} {% include 'includes/pnl-chart.html' %} {% endcomment %}
+        <form enctype="multipart/form-data" action="/portfolio/" method="post">
+            {% csrf_token %}
+            <label for="order_csv">CSV file: </label>
+            <input id="order_csv" type="file" name="order_csv" value="{{ current_name }}" required>
+            <input type="submit" value="upload">
+        </form>
       </div>
     </div>
 

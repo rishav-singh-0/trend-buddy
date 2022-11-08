@@ -292,7 +292,6 @@ class CsvTradePopulate():
     def __init__(self, user):
         self.user = user
         self.csv_data = pd.DataFrame()
-        self.trade_list = []
 
     def read_csv(self, path):
         with open(path) as f:
@@ -302,11 +301,14 @@ class CsvTradePopulate():
         # self.csv_data['order_execution_time'] = pd.to_datetime(self.csv_data['order_execution_time'], format="%Y-%m-%dT%H:%M:%S")
         self.csv_data['order_execution_time'] = self.csv_data['order_execution_time'].map(lambda x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S').timestamp()).astype(int)
         self.csv_data['trade_type'] = self.csv_data['trade_type'].str.upper()
-        print(self.csv_data)
+        # print(self.csv_data)
     
-    def add_trade(self):
-        for index, data in self.csv_data.iterrows():
-            print(data['symbol'])
+    def save_trade(self):
+        self.csv_data = self.csv_data.drop_duplicates(subset=['order_execution_time'], keep='last')
+        prev_trades = Trade.objects.all()
+        trade_list = []
+        for _, data in self.csv_data.iterrows():
+            # print(data['symbol'])
             trade = Trade(
                 user_id = self.user,
                 symbol_id = Symbol.objects.get(symbol=data['symbol']),
@@ -315,11 +317,10 @@ class CsvTradePopulate():
                 price = data['price'],
                 order_execution_time = data['order_execution_time']
             )
-            self.trade_list.append(trade)
-
-    def save_trade(self):
+            if(not prev_trades.filter(order_execution_time=data['order_execution_time'])): 
+                trade_list.append(trade)
         try:
-            Trade.objects.bulk_create(self.trade_list)
+            Trade.objects.bulk_create(trade_list)
         except Exception as e:
             print(e)
-        return self.trade_list
+        return trade_list

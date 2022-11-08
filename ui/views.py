@@ -1,8 +1,15 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
+from django.http import HttpResponseRedirect
 
 from data.models import Symbol, Candle
 from analysis.statergy import Statergy
+from .forms import OrderForm
+from data.populate import CsvTradePopulate
+from django.contrib.auth.models import User
+from pandas import read_csv
+from io import StringIO
+
 
 @login_required(login_url="/login/")
 def dashboard_view(request):
@@ -25,7 +32,30 @@ def analysis(request):
 
 @login_required(login_url="/login/")
 def portfolio_view(request):
-    context = {'segment': 'portfolio'}
+    # if this is a POST request we need to process the form data
+    if request.method == 'POST':
+        # create a form instance and populate it with data from the request:
+        form = OrderForm(request.POST, request.FILES, request.user)
+        # check whether it's valid:
+        if form.is_valid():
+            # process the data in form.cleaned_data as required
+            data = form.cleaned_data['order_csv']
+            # print(data.read())
+            trade_data = CsvTradePopulate(request.user)
+            decoded_file = data.read().decode()
+            io_string = StringIO(decoded_file)
+            trade_data.csv_data = read_csv(io_string)
+            trade_data.format_zerodha()
+            trade_list = trade_data.save_trade()
+        
+            # return trade_data.save_trade()[0]
+            # redirect to a new URL:
+            return HttpResponseRedirect('/portfolio/')
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        form = OrderForm()
+    context = {'segment': 'portfolio', 'form': form}
     return render(request, 'home/portfolio.html', context)
 
 @login_required(login_url="/login/")
