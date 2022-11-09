@@ -8,7 +8,7 @@ from .models import Holding, Trade
 def update_holding(sender, instance, **kwargs):
     symbol = instance.symbol_id
     user = instance.user_id
-    trades = Trade.objects.filter(user_id=user,symbol_id=symbol)
+    trades = Trade.objects.only('quantity','trade_type','price').filter(user_id=user,symbol_id=symbol)
     quantity = 0
     price = 0
     for i in trades:
