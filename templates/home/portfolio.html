@@ -50,8 +50,13 @@
                 <form enctype="multipart/form-data" action="/portfolio/" method="post">
                     {% csrf_token %}
                     <label for="order_csv">CSV file: </label>
-                    <input id="order_csv" type="file" name="order_csv" value="{{ current_name }}" required>
-                    <input type="submit" value="upload">
+                    <input id="order_csv" type="file" name="order_csv" required hidden>
+                    <button for="order_csv" class="btn btn-link text-white text-sm mb-0 px-0 ms-4" onclick="document.getElementById('order_csv').click()">
+                      <span id="file-chosen">Choose CSV File</span>
+                    </button>
+                    <button class="btn btn-link text-white text-sm mb-0 px-0 ms-4" onclick="submit">
+                      <i class="material-icons text-lg position-relative me-1">upload</i>upload
+                    </button>
                 </form>
               </div>
             </div>
@@ -68,4 +73,14 @@
 {% endblock content %}
 
 <!-- Specific Page JS goes HERE  -->
-{% block javascripts %}{% endblock javascripts %}
+{% block javascripts %}
+<script>
+const actualBtn = document.getElementById('order_csv');
+
+const fileChosen = document.getElementById('file-chosen');
+
+actualBtn.addEventListener('change', function(){
+  fileChosen.textContent = this.files[0].name
+})
+</script>
+{% endblock javascripts %}
