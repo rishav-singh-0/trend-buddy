@@ -10,6 +10,7 @@ from data.populate import CsvTradePopulate
 from django.contrib.auth.models import User
 from pandas import read_csv
 from io import StringIO
+from datetime import datetime
 
 
 @login_required(login_url="/login/")
@@ -55,6 +56,8 @@ def portfolio_view(request):
     else:
         form = OrderForm()
         trade_list = Trade.objects.all()
+        for i in trade_list:
+            i.order_execution_time = datetime.fromtimestamp(i.order_execution_time)
     context = {'segment': 'portfolio', 'form': form, 'trade_list':trade_list}
     return render(request, 'home/portfolio.html', context)
 
