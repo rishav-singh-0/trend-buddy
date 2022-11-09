@@ -18,3 +18,20 @@ class Trade(models.Model):
 
     def __str__(self):
         return f"{self.user_id}_{self.trade_type}_{self.symbol_id}@{self.order_execution_time}"
+
+
+class Holding(models.Model):
+
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='holding')
+    symbol_id = models.ForeignKey(Symbol, on_delete=models.CASCADE, related_name='holding')
+    created_time = models.DateField(auto_now_add=True)
+    quantity = models.FloatField()
+    buying_price = models.FloatField()
+    ltp = models.FloatField(null=True)
+    ltp_time = models.IntegerField(null=True)
+
+    class Meta:
+        unique_together = ["user_id", "symbol_id"]
+
+    def __str__(self):
+        return f"{self.user_id}_{self.symbol_id}_{self.quantity}@{self.buying_price}"
