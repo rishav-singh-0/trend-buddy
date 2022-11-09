@@ -319,8 +319,9 @@ class CsvTradePopulate():
             )
             if(not prev_trades.filter(order_execution_time=data['order_execution_time'])): 
                 trade_list.append(trade)
-        try:
-            Trade.objects.bulk_create(trade_list)
-        except Exception as e:
-            print(e)
+                trade.save()
+        # try:
+        #     Trade.objects.abulk_create(trade_list)
+        # except Exception as e:
+        #     print(e)
         return trade_list
