@@ -55,7 +55,7 @@ def portfolio_view(request):
     # if a GET (or any other method) we'll create a blank form
     else:
         form = OrderForm()
-        trade_list = Trade.objects.all()
+        trade_list = Trade.objects.filter(user_id=request.user)
         for i in trade_list:
             i.order_execution_time = datetime.fromtimestamp(i.order_execution_time)
     context = {'segment': 'portfolio', 'form': form, 'trade_list':trade_list}
