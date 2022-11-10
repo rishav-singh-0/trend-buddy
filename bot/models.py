@@ -30,6 +30,14 @@ class Holding(models.Model):
     ltp_time = models.IntegerField(null=True)
     created_time = models.IntegerField()
 
+    @property
+    def percentage_gain(self):
+        return round(100 * (self.ltp - self.buying_price) / self.buying_price, 2)
+
+    @property
+    def invested_price(self):
+        return round(self.quantity * self.buying_price, 2)
+
     class Meta:
         unique_together = ["user_id", "symbol_id"]
 
