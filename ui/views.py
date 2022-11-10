@@ -3,7 +3,7 @@ from django.shortcuts import render
 from django.http import HttpResponseRedirect
 
 from data.models import Symbol, Candle
-from bot.models import Trade
+from bot.models import Trade, Holding
 from analysis.statergy import Statergy
 from .forms import OrderForm
 from data.populate import CsvTradePopulate
@@ -11,6 +11,7 @@ from django.contrib.auth.models import User
 from pandas import read_csv
 from io import StringIO
 from datetime import datetime
+from .utils import calc_pnl
 
 
 @login_required(login_url="/login/")
@@ -34,6 +35,8 @@ def analysis(request):
 
 @login_required(login_url="/login/")
 def portfolio_view(request):
+    context = {'segment': 'portfolio'}
+
     # if this is a POST request we need to process the form data
     if request.method == 'POST':
         # create a form instance and populate it with data from the request:
@@ -55,10 +58,22 @@ def portfolio_view(request):
     # if a GET (or any other method) we'll create a blank form
     else:
         form = OrderForm()
+        
+        # trade_list
         trade_list = Trade.objects.filter(user_id=request.user)
+        holdings = Holding.objects.filter(user_id=request.user)
         for i in trade_list:
             i.order_execution_time = datetime.fromtimestamp(i.order_execution_time)
-    context = {'segment': 'portfolio', 'form': form, 'trade_list':trade_list}
+        for i in holdings:
+            i.created_time = datetime.fromtimestamp(i.created_time).strftime('%d-%m-%Y')
+
+        context['trade_list'] = trade_list
+        context['holdings'] = holdings
+            
+        # calculating profit and loss
+        # calc_pnl(request.user)
+        
+    context['form'] = form
     return render(request, 'home/portfolio.html', context)
 
 @login_required(login_url="/login/")
