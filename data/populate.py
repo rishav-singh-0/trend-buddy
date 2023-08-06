@@ -186,7 +186,7 @@ class NSEPopulate():
 
     def _date_srt_to_unix(self, row):
         # DATE format = "14-05-2022"
-        date = datetime.strptime(row['Date '], '%d-%b-%Y').timestamp()
+        date = datetime.strptime(row['Date '], self.date_format).timestamp()
         return int(date)
 
     def filter_data(self, dataframe):
