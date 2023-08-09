@@ -1,10 +1,15 @@
 import pandas as pd
-from .models import Symbol, Candle
+import yfinance as yf
+from datetime import datetime
+from .models import Exchange, Symbol, Candle
 
 class BaseDataFetcher():
-    def __init__(self, symbol):
-        self.symbol = symbol
-        self.candle_data = pd.DataFrame()
+    def __init__(self, symbol, exchange):
+        self.symbol = Symbol.objects.filter(symbol=symbol)[0]
+        self.exchange = Exchange.objects.filter(exchange=exchange)[0]
+        self.candle_data = pd.DataFrame(columns=['time', 'open', 'high', 'low', 'close', 'volume'])
+        self.input_date_format="%d-%m-%Y"
+        self.date_format="%d-%m-%Y"
 
     def fetch_data(self, start_date, end_date):
         # TODO: Validate date format
@@ -13,16 +18,23 @@ class BaseDataFetcher():
     def filter_data(self, data):
         # TODO: Implement data filtartation logic
         raise NotImplementedError("Subclasses must implement this method")
+    
+    def format_date(self, date):
+        '''
+        Input date format is fixed, so this function changes the format to the
+        type required by respective api
+        '''
+        date = datetime.strptime(date, self.input_date_format)
+        return date.strftime(self.date_format)
 
     def save_to_database(self):
-        symbol = Symbol.objects.filter(symbol=self.symbol)[0]
         existing_times = set(Candle.objects.filter(symbol=self.symbol).values_list('time', flat=True))
         new_candles = []
 
         for _, data in self.candle_data.iterrows():
             if data['time'] not in existing_times:
                 candle = Candle(
-                    symbol=symbol,
+                    symbol=self.symbol.symbol,
                     time=data['time'],
                     open=data['open'],
                     high=data['high'],
@@ -32,10 +44,10 @@ class BaseDataFetcher():
                 )
                 new_candles.append(candle)
         try:
-            # print(new_candles)
             Candle.objects.bulk_create(new_candles)
         except Exception as e:
             print(e)
+        return new_candles
 
     def save_to_csv(self, filename):
         df = pd.DataFrame(self.candle_data)
