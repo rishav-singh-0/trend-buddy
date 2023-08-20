@@ -7,7 +7,7 @@ from bot.models import Trade
 from data.serializers import ExchangeSerializers, FavouriteSerializers, SymbolSerializers, CandleSerializers
 
 from data.models import Exchange, Favourite, Symbol, Candle
-from data.populate import CryptoPopulate, NSEPopulate, NSEList
+from data.populate import CryptoPopulate, NSEPopulate, NSEList, PopulateYF
 
 from django.core.serializers import json
 json_serializer = json.Serializer()
@@ -37,7 +37,8 @@ class NSEPopulateView(views.APIView):
     def post(self, request, format=None):
         data = request.query_params
         # print(data)
-        stock = NSEPopulate(data['symbol'], from_date=data['from_date'], to_date=data['to_date'])
+        # stock = NSEPopulate(data['symbol'], from_date=data['from_date'], to_date=data['to_date'])
+        stock = PopulateYF(data['symbol'], from_date=data['from_date'], to_date=data['to_date'])
         stock.get_history_data()
         result = stock.save_candles()
         result = json_serializer.serialize(result)
