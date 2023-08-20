@@ -15,6 +15,7 @@ An OpenSource Trading bot
 
 ### Remaining
 - Automate fetching and storing in db, or use websocket somehow
+- Use [asyncio](https://youtu.be/XdvBAh7pa5U)
 
 ## Analysis
 - Get data from `data` app according to user's selection
