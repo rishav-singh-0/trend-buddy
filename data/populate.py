@@ -12,6 +12,92 @@ from io import StringIO
 from time import sleep
 import requests
 import pandas as pd
+import yfinance as yf
+
+class Populate():
+    def __init__(self, symbol, 
+                 from_date=datetime(datetime.today().year - 1, datetime.today().month,datetime.today().day),
+                 to_date=datetime.today()
+             ):
+        self.symbol=symbol
+        input_date_format="%d-%m-%Y"
+        self.from_date=datetime.strptime(from_date, input_date_format)
+        self.to_date=datetime.strptime(to_date, input_date_format)
+        self.df=pd.DataFrame()
+
+    def save_csv(self):
+        if not self.df.empty:
+            self.df.to_csv(self.symbol+'.csv',index=False)
+    
+    def save_candles(self):
+        symbol = Symbol.objects.filter(symbol=self.symbol)[0]
+        prev_candles = Candle.objects.filter(symbol=symbol)
+        # old_symbols = Symbol.objects.all()
+        candles = []
+        print("Save\n\n")
+        print(self.df)
+        for _, data in self.df.iterrows():
+            candle = Candle(
+                symbol=symbol,
+                time=data['time'],
+                open=data['open'],
+                high=data['high'],
+                low=data['low'],
+                close=data['close'],
+                volume=data['volume'],
+                no_of_trades=data['no_of_trades']
+            )
+            if(not prev_candles.filter(time=data['time'])): 
+                candles.append(candle)
+        try:
+            print(candles)
+            Candle.objects.bulk_create(candles)
+        except Exception as e:
+            print(e)
+        return candles
+
+
+class PopulateYF(Populate):
+    '''
+    input example: 
+        - 'TCS' 
+        - from_date='14-05-2015'
+        - to_date='14-05-2022'
+    output:
+        populate the database with 'TCS' symbol
+    '''
+    
+    def __init__(self, symbol, exchange="NS",
+                 from_date=datetime(datetime.today().year - 1, datetime.today().month,datetime.today().day),
+                 to_date=datetime.today()
+             ):
+        
+        super().__init__(symbol, from_date, to_date)
+        self.date_format = "%Y-%m-%d"
+        self.exchange = str(exchange)
+        self.from_date=self.from_date.strftime(self.date_format)
+        self.to_date=self.to_date.strftime(self.date_format)
+        # print("Preparing...")
+
+    def get_history_data(self):
+        '''
+        Fetch data and return pandas dataframe
+        '''
+        dataframe = yf.download(str(self.symbol)+"."+str(self.exchange), start=self.from_date, end=self.to_date)
+        dataframe.reset_index(inplace=True)
+        self.df = self.filter_data(dataframe)
+        return self.df
+
+    def filter_data(self, dataframe):
+        df=pd.DataFrame()
+        df['time'] = dataframe['Date'].map(lambda x: x.timestamp()).astype(int)
+        df['open'] = dataframe['Open']
+        df['high'] = dataframe['High']
+        df['low'] = dataframe['Low']
+        df['close'] = dataframe['Close']
+        df['volume'] = dataframe['Volume']
+        df['no_of_trades'] = 0
+        return df
 
 
 class CryptoPopulate():
