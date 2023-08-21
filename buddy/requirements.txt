@@ -1,1 +1,11 @@
-Django==4.2.4
+# core
+Django>=4.2.4
+
+# calculations
+TA-Lib>=0.4.28
+numpy>=1.25.2
+
+# data
+yfinance>=0.2.28
+beautifulsoup4>=4.12.2
+pandas>=2.0.3
