@@ -61,6 +61,17 @@ An OpenSource Trading bot
 - Cycle through daily, weekly, monthly candle data and check for candlestick
   patterns
 
+# Tools Used
+
+## Data fetching
+
+- [yfinance](https://github.com/ranaroussi/yfinance)
+- [Alpha Vantage](https://www.alphavantage.co/documentation/) (TODO)
+
+## Chart and Data Visualization
+
+- [Lightweight Charts](https://github.com/tradingview/lightweight-charts)
+
 # Installation
 
 Install TA-Lib
