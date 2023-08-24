@@ -40,6 +40,7 @@ INSTALLED_APPS = [
 
     # My apps
     'api',
+    'api.data',
     'analysis',
     'frontend',
 
