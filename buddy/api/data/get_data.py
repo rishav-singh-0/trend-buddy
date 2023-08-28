@@ -53,3 +53,48 @@ class BaseDataFetcher():
         df = pd.DataFrame(self.candle_data)
         df.to_csv(filename, index=False)
 
+class YahooFinanceDataFetcher(BaseDataFetcher):
+
+    def fetch_data(self, start_date, end_date):
+
+        # converting date to the required format
+        self.date_format="%Y-%m-%d"
+        start_date = self.format_date(start_date)
+        end_date = self.format_date(end_date)
+
+        # exchange
+        exchange = self.exchange
+        if(self.exchange.exchange == "NSE"):
+            exchange="NS"
+
+        # fetching data from yfinance api
+        data = yf.download(str(self.symbol)+'.'+exchange, start=start_date, end=end_date)
+        print(data)
+
+        filtered_data = self.filter_data(data)
+        self.candle_data = pd.concat([self.candle_data, filtered_data], ignore_index=True)
+
+
+    def filter_data(self, data):
+        '''
+        Takes raw dataframe from yfinance and convert to required dataframe format
+        '''
+
+        # Reset index for easier manipulation
+        data.reset_index(inplace=True)
+
+        # Convert time to Unix format
+        unix_timestamps = (data['Date'] - pd.Timestamp("1970-01-01")) // pd.Timedelta('1s')
+    
+        # Used the .copy() method to create a copy of the selected columns, which
+        # can be faster and more memory-efficient than creating a new DataFrame with
+        # column renaming.
+        filtered_data = data[['Open', 'High', 'Low', 'Close', 'Volume']].copy()
+        filtered_data.columns = ['open', 'high', 'low', 'close', 'volume']
+        # Inserted the 'time' column with unix_timestamps using the .insert()
+        # method, which is efficient for adding columns at a specific position.
+        filtered_data.insert(0, 'time', unix_timestamps)
+        
+        return filtered_data
+
+
