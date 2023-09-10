@@ -72,6 +72,10 @@ An OpenSource Trading bot
 
 - [Lightweight Charts](https://github.com/tradingview/lightweight-charts)
 
+## Backtesting
+
+- [VectorBT](https://github.com/polakowo/vectorbt)
+
 # Installation
 
 Install TA-Lib
