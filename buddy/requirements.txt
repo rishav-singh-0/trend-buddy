@@ -3,6 +3,7 @@ Django>=4.2.4
 
 # calculations
 TA-Lib>=0.4.28
+vectorbt>=0.25.5
 numpy>=1.25.2
 pandas>=2.0.3
 
