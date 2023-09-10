@@ -1,5 +1,6 @@
 # core
 Django>=4.2.4
+python-decouple>=3.8
 
 # calculations
 TA-Lib>=0.4.28
