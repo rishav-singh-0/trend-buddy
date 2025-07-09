@@ -1,12 +1,11 @@
-# Project trend-buddy
-
-One Paragraph of project description goes here
+# Trend Buddy
+An OpenSource Trading bot
 
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
-## MakeFile
+### MakeFile
 
 Run build make command with tests
 ```bash
@@ -51,3 +50,8 @@ Clean up binary from the last build:
 ```bash
 make clean
 ```
+
+# References
+- https://github.com/binance/binance-spot-api-docs
+- https://binance-docs.github.io/apidocs/spot/en/
+- https://github.com/binance/binance-spot-api-docs/blob/master/web-socket-streams.md
