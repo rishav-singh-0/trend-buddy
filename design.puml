@@ -1,0 +1,43 @@
+@startuml Trend Buddy
+' scale 600 width
+
+state Frontend: WebUI
+state "Api Gateway" as API
+
+state "Data Manager" as DM: MySQL
+DM: Sqlite3
+
+state "Data Aggrigator" as DA
+DA: NSE
+DA: yFinance
+DA: Zerodha
+DA: Binance
+
+state "Portfolio": Current Holdings
+Portfolio: Sector Distribution
+Portfolio: Risk Management
+
+state "Order Execution" as OE {
+  state "Broker APIs" as broker 
+  broker: Zerodha
+  broker: Grow
+  broker: Binance
+}
+state Backtesting {
+    state "Statergy": SMA, RSI, Custom
+}
+
+state Analytics {
+  state AI
+}
+
+' Flow
+Frontend --> API : User Interaction
+API --> DM : Data
+Backtesting --> DM : Candelstick and Fundamental data
+DA --> Backtesting : Historical and Realtime candles
+API --> OE: Buy/Sell calls
+OE --> Portfolio: Reflect in holdings
+DA --> DM: Store
+
+@enduml
