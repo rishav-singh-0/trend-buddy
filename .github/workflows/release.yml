@@ -18,6 +18,13 @@ jobs:
         with:
           go-version: '1.22.x'
 
+      - name: Install templ
+        shell: bash
+        run: go install github.com/a-h/templ/cmd/templ@latest
+      - name: Run templ generate
+        shell: bash
+        run: templ generate -path .
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:

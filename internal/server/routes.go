@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+
+	"github.com/a-h/templ"
+	"trend-buddy/cmd/web"
 )
 
 func (s *Server) RegisterRoutes() http.Handler {
@@ -13,6 +16,11 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("/", s.HelloWorldHandler)
 
 	mux.HandleFunc("/health", s.healthHandler)
+
+	fileServer := http.FileServer(http.FS(web.Files))
+	mux.Handle("/assets/", fileServer)
+	mux.Handle("/web", templ.Handler(web.HelloForm()))
+	mux.HandleFunc("/hello", web.HelloWebHandler)
 
 	// Wrap the mux with CORS middleware
 	return s.corsMiddleware(mux)
