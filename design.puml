@@ -18,7 +18,7 @@ Portfolio: Sector Distribution
 Portfolio: Risk Management
 
 state "Order Execution" as OE {
-  state "Broker APIs" as broker 
+  state "Broker APIs" as broker
   broker: Zerodha
   broker: Grow
   broker: Binance

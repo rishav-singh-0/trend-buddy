@@ -1,6 +1,0 @@
-.venv/
-.vscode/
-.git/
-.gitignore
-include/
-*docker*

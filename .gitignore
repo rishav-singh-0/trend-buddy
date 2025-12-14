@@ -21,6 +21,7 @@ tmp/
 # IDE specific files
 .vscode
 .idea
+.venv
 
 # .env file
 .env
@@ -31,4 +32,3 @@ main
 
 # OS X generated file
 .DS_Store
-
