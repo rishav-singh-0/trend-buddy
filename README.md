@@ -1,228 +1,123 @@
 # Trend Buddy
-An OpenSource Trading bot
 
-## Getting Started
+An Open-Source Trading Companion for Analysis, Backtesting, and Automated Trading.
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+## About The Project
 
-### MakeFile
+Trend Buddy is a comprehensive, open-source trading bot designed for developers and trading enthusiasts. It provides a modular framework for fetching market data, running backtests, executing trades, and managing portfolios. The project aims to incorporate AI-powered analytics to provide deeper insights into market trends.
 
-Run build make command with tests
-```bash
-make all
+## Features
+
+-   **Technical Analysis:** Generate technical analysis pages similar to TradingView.
+-   **Automated Trading:**
+    -   Execute buy/sell calls based on TradingView signals.
+    -   Support for partial buy/sell orders.
+    -   Predictive stop-loss calculation.
+-   **Strategy Management:**
+    -   Utilize multiple indicators with customizable weights and priorities.
+    -   Sector-specific macro analysis (e.g., IT, Pharma, Banking).
+-   **Portfolio Management:**
+    -   Import order history from brokers via CSV (e.g., Zerodha).
+    -   Track overall and daily Profit & Loss with candlestick charts.
+-   **Financial Tools:**
+    -   SIP calculator with customizable parameters.
+    -   Candlestick pattern detection across daily, weekly, and monthly timeframes.
+-   **Backtesting & Optimization:**
+    -   Run backtests on historical data for any time period.
+    -   Optimize strategy parameters like RSI.
+-   **AI-Powered Analytics:**
+    -   Perform fundamental and sentiment analysis.
+
+## Architecture
+
+The system is designed with a modular, service-oriented architecture to ensure scalability and maintainability. A central API Gateway orchestrates communication between the user-facing frontend and the various backend services.
+
+Here is a breakdown of the core components as depicted in the architectural diagram:
+
+-   **Frontend (WebUI):** The graphical user interface where users can interact with the application, view portfolio performance, and configure strategies.
+
+-   **API Gateway:** The single entry point for all frontend requests. It routes calls to the appropriate internal service, such as placing an order or fetching historical data.
+
+-   **Data Aggregator:** This module is responsible for fetching data from multiple external sources, including:
+    -   Stock exchanges (`NSE`)
+    -   Financial data providers (`yFinance`)
+    -   Broker APIs (`Zerodha`, `Binance`)
+    It provides both historical and real-time data to the Backtesting engine and the Data Manager.
+
+-   **Data Manager:** The persistence layer of the application. It uses databases like `MySQL` and `Sqlite3` to store all candlestick data, fundamental data, and user portfolio information.
+
+-   **Backtesting Engine:** Enables users to test trading strategies (e.g., SMA, RSI, Custom) against historical data provided by the Data Manager.
+
+-   **Order Execution (OE):** Manages the lifecycle of buy and sell orders. It interfaces with various broker APIs (`Zerodha`, `Groww`, `Binance`) to execute trades and then updates the Portfolio module.
+
+-   **Portfolio Manager:** Tracks current holdings, monitors sector-wise portfolio distribution, and helps in managing risk.
+
+-   **Analytics Engine:** An AI-powered module dedicated to performing advanced analysis, such as fundamental and sentiment analysis, to provide deeper market insights.
+
+<details>
+<summary>View Architecture Diagram (PlantUML)</summary>
+
+```plantuml
+@startuml Trend Buddy
+' scale 600 width
+
+state Frontend: WebUI
+state "Api Gateway" as API
+
+state "Data Manager" as DM: MySQL
+DM: Sqlite3
+
+state "Data Aggrigator" as DA
+DA: NSE
+DA: yFinance
+DA: Zerodha
+DA: Binance
+
+state "Portfolio": Current Holdings
+Portfolio: Sector Distribution
+Portfolio: Risk Management
+
+state "Order Execution" as OE {
+  state "Broker APIs" as broker
+  broker: Zerodha
+  broker: Grow
+  broker: Binance
+}
+state Backtesting {
+    state "Statergy": SMA, RSI, Custom
+}
+
+state Analytics {
+  state AI
+}
+
+' Flow
+Frontend --> API : User Interaction
+API --> DM : Data
+Backtesting --> DM : Candelstick and Fundamental data
+DA --> Backtesting : Historical and Realtime candles
+API --> OE: Buy/Sell calls
+OE --> Portfolio: Reflect in holdings
+DA --> DM: Store
+
+@enduml
 ```
 
-Build the application
-```bash
-make build
-```
+</details>
 
-Run the application
-```bash
-make run
-```
-Create DB container
-```bash
-make docker-run
-```
+## Technology Stack
 
-Shutdown DB Container
-```bash
-make docker-down
-```
-
-DB Integrations Test:
-```bash
-make itest
-```
-
-Live reload the application:
-```bash
-make watch
-```
-
-Run the test suite:
-```bash
-make test
-```
-
-Clean up binary from the last build:
-```bash
-make clean
-```
-
-# References
-- https://github.com/binance/binance-spot-api-docs
-- https://binance-docs.github.io/apidocs/spot/en/
-- https://github.com/binance/binance-spot-api-docs/blob/master/web-socket-streams.md
-
-
-------------------------------------
-Workflow
-------------------------------------
-
-
-# DATA
-get data from binance api
-store in sql
-connect websocket with database
-
-day candle for 400 days
-15 min candle for 2 days
-
-# VISUALISE
-integrate `lightweight chart` in jinja2
-take data from db and make chart
-
-## ANALYSIS
-use TA-Lib library and impliment some technical analysis on data from db
-
-# ACTION
-make buy or sell calls through binance api
-
-
-------------------------------------
-## Idea
-- Generate Technical page like [TradingView technical page](https://in.tradingview.com/symbols/MATICUSDT/technicals/)
-- Use trading view to send buy and sell calls
-- Partial buy and sell
-- Predict stoploss
-- Use multiple indicators and give them priority or waitage
-- Macro analysis for specific sectors like IT, electronics, pharma, consumer,
-  bank, etc
-
-#### Import orders
-- Import csv files which are exported from brokers like Zerodha to populate the
-  orders table
-
-#### Profit and Loss Chart
-- Portfolio for showing overall Profit and Loss
-- Daily candlestick chart for profit and loss
-
-#### Financial Calculator
-- Sip calculator, select index or equity, select time duration, select amount
-  per month, select amount growth % per month, calculate the final return
-  compared to the total amount invested
-- Cycle through daily, weekly, monthly candle data and check for candlestick
-  patterns
-
-### Tools Used
-#### Data fetching
+### Data Fetching
 - [yfinance](https://github.com/ranaroussi/yfinance)
-- [Alpha Vantage](https://www.alphavantage.co/documentation/) (TODO)
+- [Alpha Vantage](https://www.alphavantage.co/documentation/) (Planned)
 
-#### Chart and Data Visualization
+### Charting & Visualization
 - [Lightweight Charts](https://github.com/tradingview/lightweight-charts)
 
-#### Backtesting
+### Backtesting
 - [VectorBT](https://github.com/polakowo/vectorbt)
 
-### Analysis
-Backtesting
-Parameter Optimization(RSI)
-Fundamental Analysis based on numbers
-
-## Prompt
-Generate a Go project(trend-buddy) with following standard design patterns with keeping in mind points like scalibility and simplicity.
-This tool should contain modular design for
-1. fetching and maintaining data
-2. running backtests on any timeperiod of a data
-3. execute paper-trade or actual trade orders (in future, it could support multiple broker platforms like zerodha, grow, dhan, etc.)
-4. portfolio management to manage existing orders and portfolio
-5. database management module: for storing all the tables and everything (use mysql for now, but keep the design in such a way to include multiple databases)
-6. analytics using ai (fundamenta, sentiments, etc.)
-7. Frontend module: can use any simple thing right now (in future maybe migrate to vue, but not sure)
-------------------------------------
-
-# Trend Buddy
-An OpenSource Trading bot
-
-# References
-- https://github.com/binance/binance-spot-api-docs
-- https://binance-docs.github.io/apidocs/spot/en/
-- https://github.com/binance/binance-spot-api-docs/blob/master/web-socket-streams.md
-
-# Features
-
-## Data
-- Makes api calls to binance and fetches realtime data
-- Stores data in sqlite3 database
-- Provides endpoints to access the data from db
-
-### Remaining
-- Automate fetching and storing in db, or use websocket somehow
-- Use [asyncio](https://youtu.be/XdvBAh7pa5U)
-
-## Analysis
-- Get data from `data` app according to user's selection
-- Show candlestick chart from TradingView widget
-- Select favourite symbols from all available symbols
-- Use `TA-Lib` for technical analysis
-
-### Remaining
-- Generate latest strategies' value (eg. rsi, macd, etc.) and show it in same
-  table
-
-## Bot
-- Take data from binance websocket
-- Automate using RQ-Worker
-- Take strategies and from analysis app and generate buy or sell calls
-
-### Remaining
-- Add order history in db
-
-## TODO
-- Generate Technical page like [TradingView technical page](https://in.tradingview.com/symbols/MATICUSDT/technicals/)
-    
-# Idea
-- Use trading view to send buy and sell calls
-- Partial buy and sell
-- Predict stoploss
-- Use multiple indicators and give them priority or waitage
-- Macro analysis for specific sectors like IT, electronics, pharma, consumer,
-  bank, etc
-
-## Import orders
-- Import csv files which are exported from brokers like Zerodha to populate the
-  orders table
-
-## Profit and Loss Chart
-- Portfolio for showing overall Profit and Loss
-- Daily candlestick chart for profit and loss
-
-## Financial Calculator 
-- Sip calculator, select index or equity, select time duration, select amount
-  per month, select amount growth % per month, calculate the final return
-  compared to the total amount invested
-- Cycle through daily, weekly, monthly candle data and check for candlestick
-  patterns
-
-# Tools Used
-
-## Data fetching
-
-- [yfinance](https://github.com/ranaroussi/yfinance)
-- [Alpha Vantage](https://www.alphavantage.co/documentation/) (TODO)
-
-## Chart and Data Visualization
-
-- [Lightweight Charts](https://github.com/tradingview/lightweight-charts)
-
-## Backtesting
-
-- [VectorBT](https://github.com/polakowo/vectorbt)
-
-# Installation
-
-Install TA-Lib
-
-- Using conda
-```
-conda install -c conda-forge ta-lib
-```
-- See [this](https://mrjbq7.github.io/ta-lib/install.html) if not using conda
-
-Python dependencies
-```
-pip install -r requirements.txt
-```
+## API References
+- [Binance Spot API Docs](https://github.com/binance/binance-spot-api-docs)
+- [Binance API Docs (Spot)](https://binance-docs.github.io/apidocs/spot/en/)
+- [Binance Web Socket Streams](https://github.com/binance/binance-spot-api-docs/blob/master/web-socket-streams.md)
