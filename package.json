@@ -1,0 +1,15 @@
+{
+  "name": "trend-buddy",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Modular monolith scaffold for Trend Buddy.",
+  "scripts": {
+    "start": "node apps/api/src/http-server.js",
+    "test": "node --test",
+    "check": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

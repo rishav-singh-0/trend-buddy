@@ -30,5 +30,11 @@ tmp/
 main
 *templ.go
 
+# Node workspace
+node_modules/
+dist/
+coverage/
+package-lock.json
+
 # OS X generated file
 .DS_Store
