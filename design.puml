@@ -1,43 +1,51 @@
 @startuml Trend Buddy
-' scale 600 width
+skin rose
 
 state Frontend: WebUI
-state "Api Gateway" as API
+state "API Gateway" as API
+
+package "Core Domains" {
+  state "Market Data" as MarketData
+  state "Strategy Engine" as Strategy
+  state "Backtesting" as Backtesting
+  state "Order Execution" as Orders
+  state "Portfolio Manager" as Portfolio
+  state "Risk Engine" as Risk
+  state "Analytics" as Analytics
+}
 
 state "Data Manager" as DM: MySQL
 DM: Sqlite3
 
-state "Data Aggrigator" as DA
-DA: NSE
-DA: yFinance
-DA: Zerodha
-DA: Binance
+package "Integrations" {
+  state "Market Providers" as Providers
+  Providers: NSE
+  Providers: yFinance
+  Providers: Alpha Vantage
 
-state "Portfolio": Current Holdings
-Portfolio: Sector Distribution
-Portfolio: Risk Management
-
-state "Order Execution" as OE {
-  state "Broker APIs" as broker
-  broker: Zerodha
-  broker: Grow
-  broker: Binance
-}
-state Backtesting {
-    state "Statergy": SMA, RSI, Custom
-}
-
-state Analytics {
-  state AI
+  state "Broker APIs" as Brokers
+  Brokers: Zerodha
+  Brokers: Groww
+  Brokers: Binance
 }
 
 ' Flow
 Frontend --> API : User Interaction
-API --> DM : Data
-Backtesting --> DM : Candelstick and Fundamental data
-DA --> Backtesting : Historical and Realtime candles
-API --> OE: Buy/Sell calls
-OE --> Portfolio: Reflect in holdings
-DA --> DM: Store
+API --> MarketData : Ingest and Query Data
+API --> Strategy : Strategy Configuration
+API --> Backtesting : Simulate Strategies
+API --> Orders : Buy/Sell Calls
+API --> Portfolio : Holdings and P&L
+API --> Analytics : Advisory Insights
+
+MarketData --> Providers : Fetch Historical and Realtime Candles
+MarketData --> DM : Store Candlestick and Fundamental Data
+Backtesting --> DM : Load Historical Candles
+Backtesting --> Strategy : Evaluate Rules
+Orders --> Risk : Pre-trade Checks
+Orders --> Brokers : Execute Orders
+Orders --> Portfolio : Reflect Filled Orders
+Portfolio --> DM : Persist Snapshots
+Analytics --> DM : Persist Reports
 
 @enduml

@@ -2,7 +2,7 @@
 
 An Open-Source Trading Companion for Analysis, Backtesting, and Automated Trading.
 
-## About The Project
+## About the Project
 
 Trend Buddy is a comprehensive, open-source trading bot designed for developers and trading enthusiasts. It provides a modular framework for fetching market data, running backtests, executing trades, and managing portfolios. The project aims to incorporate AI-powered analytics to provide deeper insights into market trends.
 
@@ -30,75 +30,105 @@ Trend Buddy is a comprehensive, open-source trading bot designed for developers 
 
 ## Architecture
 
-The system is designed with a modular, service-oriented architecture to ensure scalability and maintainability. A central API Gateway orchestrates communication between the user-facing frontend and the various backend services.
+The repository now follows a modular monolith layout so the architecture is explicit in code, not only in diagrams. A central API application orchestrates communication between the frontend shell, domain modules, data abstractions, and vendor integrations.
 
-Here is a breakdown of the core components as depicted in the architectural diagram:
+### Core components
 
 -   **Frontend (WebUI):** The graphical user interface where users can interact with the application, view portfolio performance, and configure strategies.
-
 -   **API Gateway:** The single entry point for all frontend requests. It routes calls to the appropriate internal service, such as placing an order or fetching historical data.
-
--   **Data Aggregator:** This module is responsible for fetching data from multiple external sources, including:
+-   **Market Data / Data Aggregator:** This module is responsible for fetching data from multiple external sources, including:
     -   Stock exchanges (`NSE`)
     -   Financial data providers (`yFinance`)
     -   Broker APIs (`Zerodha`, `Binance`)
     It provides both historical and real-time data to the Backtesting engine and the Data Manager.
-
 -   **Data Manager:** The persistence layer of the application. It uses databases like `MySQL` and `Sqlite3` to store all candlestick data, fundamental data, and user portfolio information.
-
+-   **Strategy Engine:** A reusable strategy layer for `SMA`, `RSI`, and weighted custom strategies.
 -   **Backtesting Engine:** Enables users to test trading strategies (e.g., SMA, RSI, Custom) against historical data provided by the Data Manager.
-
 -   **Order Execution (OE):** Manages the lifecycle of buy and sell orders. It interfaces with various broker APIs (`Zerodha`, `Groww`, `Binance`) to execute trades and then updates the Portfolio module.
-
 -   **Portfolio Manager:** Tracks current holdings, monitors sector-wise portfolio distribution, and helps in managing risk.
-
+-   **Risk Engine:** Applies reusable pre-trade guardrails such as order-size and concentration checks.
 -   **Analytics Engine:** An AI-powered module dedicated to performing advanced analysis, such as fundamental and sentiment analysis, to provide deeper market insights.
+
+### Repository layout
+
+```text
+apps/
+  api/                      # Backend entrypoint and route orchestration
+  web/                      # Frontend shell and navigation composition
+
+packages/
+  core/                     # Domain logic
+  integrations/             # Broker and market-data adapters
+  data/                     # Persistence and cache abstractions
+  shared/                   # Contracts, config, logging, auth, utilities
+
+tests/
+  contract/
+  integration/
+  e2e/
+  fixtures/
+
+docs/
+  architecture/
+  api/
+  decisions/
+```
+
+See [docs/architecture/overview.md](docs/architecture/overview.md), [docs/api/domains.md](docs/api/domains.md), and [docs/decisions/0001-modular-monolith.md](docs/decisions/0001-modular-monolith.md) for the reasoning behind the scaffold.
 
 <details>
 <summary>View Architecture Diagram (PlantUML)</summary>
 
 ```plantuml
 @startuml Trend Buddy
-' scale 600 width
+skin rose
 
 state Frontend: WebUI
-state "Api Gateway" as API
+state "API Gateway" as API
+
+package "Core Domains" {
+  state "Market Data" as MarketData
+  state "Strategy Engine" as Strategy
+  state "Backtesting" as Backtesting
+  state "Order Execution" as Orders
+  state "Portfolio Manager" as Portfolio
+  state "Risk Engine" as Risk
+  state "Analytics" as Analytics
+}
 
 state "Data Manager" as DM: MySQL
 DM: Sqlite3
 
-state "Data Aggrigator" as DA
-DA: NSE
-DA: yFinance
-DA: Zerodha
-DA: Binance
+package "Integrations" {
+  state "Market Providers" as Providers
+  Providers: NSE
+  Providers: yFinance
+  Providers: Alpha Vantage
 
-state "Portfolio": Current Holdings
-Portfolio: Sector Distribution
-Portfolio: Risk Management
-
-state "Order Execution" as OE {
-  state "Broker APIs" as broker
-  broker: Zerodha
-  broker: Grow
-  broker: Binance
-}
-state Backtesting {
-    state "Statergy": SMA, RSI, Custom
-}
-
-state Analytics {
-  state AI
+  state "Broker APIs" as Brokers
+  Brokers: Zerodha
+  Brokers: Groww
+  Brokers: Binance
 }
 
 ' Flow
 Frontend --> API : User Interaction
-API --> DM : Data
-Backtesting --> DM : Candelstick and Fundamental data
-DA --> Backtesting : Historical and Realtime candles
-API --> OE: Buy/Sell calls
-OE --> Portfolio: Reflect in holdings
-DA --> DM: Store
+API --> MarketData : Ingest and Query Data
+API --> Strategy : Strategy Configuration
+API --> Backtesting : Simulate Strategies
+API --> Orders : Buy/Sell Calls
+API --> Portfolio : Holdings and P&L
+API --> Analytics : Advisory Insights
+
+MarketData --> Providers : Fetch Historical and Realtime Candles
+MarketData --> DM : Store Candlestick and Fundamental Data
+Backtesting --> DM : Load Historical Candles
+Backtesting --> Strategy : Evaluate Rules
+Orders --> Risk : Pre-trade Checks
+Orders --> Brokers : Execute Orders
+Orders --> Portfolio : Reflect Filled Orders
+Portfolio --> DM : Persist Snapshots
+Analytics --> DM : Persist Reports
 
 @enduml
 ```
@@ -121,3 +151,23 @@ DA --> DM: Store
 - [Binance Spot API Docs](https://github.com/binance/binance-spot-api-docs)
 - [Binance API Docs (Spot)](https://binance-docs.github.io/apidocs/spot/en/)
 - [Binance Web Socket Streams](https://github.com/binance/binance-spot-api-docs/blob/master/web-socket-streams.md)
+
+## Current scaffold
+
+-   `apps/api/src/app.js` composes the backend modules and exposes domain routes.
+-   `apps/api/src/http-server.js` runs the backend as an HTTP service with JSON endpoints and a `/health` route.
+-   `apps/web/src/app-shell.js` defines the frontend navigation and dashboard surface.
+-   `packages/core/*` contains runnable domain modules for market data, strategies, backtesting, orders, portfolio, analytics, and risk.
+-   `packages/integrations/*` contains provider adapters for brokers and market-data sources.
+-   `tests/` contains contract, integration, and end-to-end smoke tests that verify the architecture stays connected.
+
+## Docker
+
+Build and run the backend container with:
+
+```bash
+docker build -t trend-buddy .
+docker run --rm -p 3000:3000 trend-buddy
+```
+
+Available routes include `/health`, `/market-data`, `/strategies`, `/backtests`, `/orders`, `/portfolio`, and `/analytics`.
