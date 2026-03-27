@@ -9,6 +9,7 @@ class Settings:
     api_host: str
     api_port: int
     cors_origins: list[str]
+    market_data_db_path: str
 
 
 def get_settings() -> Settings:
@@ -18,4 +19,5 @@ def get_settings() -> Settings:
         api_host=os.getenv("TREND_BUDDY_API_HOST", "0.0.0.0"),
         api_port=int(os.getenv("TREND_BUDDY_API_PORT", "3000")),
         cors_origins=cors_origins or ["http://localhost:5173"],
+        market_data_db_path=os.getenv("TREND_BUDDY_MARKET_DATA_DB_PATH", ".data/market-data.sqlite3"),
     )

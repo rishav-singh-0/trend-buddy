@@ -27,3 +27,24 @@ export type MarketSnapshot = {
 	signal: string;
 	generated_at: string;
 };
+
+export type MarketCandle = {
+	time: number;
+	open: number;
+	high: number;
+	low: number;
+	close: number;
+	volume: number;
+};
+
+export type MarketCandlesResponse = {
+	symbol: string;
+	interval: string;
+	provider: string | null;
+	source: string;
+	candles: MarketCandle[];
+};
+
+export type ApiHealth = {
+	status: string;
+};

@@ -17,6 +17,7 @@
 # Go workspace file
 go.work
 tmp/
+.data/
 
 # IDE specific files
 .vscode
@@ -35,6 +36,7 @@ node_modules/
 dist/
 coverage/
 package-lock.json
+uv.lock
 
 # OS X generated file
 .DS_Store
