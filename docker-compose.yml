@@ -1,0 +1,31 @@
+services:
+  api:
+    build: .
+    working_dir: /workspace
+    command: ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3000", "--reload"]
+    environment:
+      TREND_BUDDY_API_HOST: 0.0.0.0
+      TREND_BUDDY_API_PORT: "3000"
+      TREND_BUDDY_CORS_ORIGINS: http://localhost:5173
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/workspace
+
+  frontend:
+    build: ./apps/frontend
+    working_dir: /workspace/apps/frontend
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
+    environment:
+      PUBLIC_API_BASE_URL: http://localhost:3000
+      PRIVATE_API_BASE_URL: http://api:3000
+    depends_on:
+      - api
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./apps/frontend:/workspace/apps/frontend
+      - frontend-node-modules:/workspace/apps/frontend/node_modules
+
+volumes:
+  frontend-node-modules:
