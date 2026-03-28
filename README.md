@@ -10,21 +10,6 @@ The repository now includes a lightweight backend and dashboard spike:
 - **SvelteKit** provides the dashboard shell with SSR plus client-side interactivity.
 - **Pydantic contracts** live in `packages/shared/contracts` and back both API routes and UI data shapes.
 
-## Repository Layout
-
-```text
-apps/
-  api/                      # FastAPI app, routers, realtime endpoint
-  frontend/                 # SvelteKit dashboard shell
-packages/
-  shared/
-    config/                # Environment-backed runtime settings
-    contracts/             # Typed API response models
-tests/                     # Stdlib smoke tests for the API spike
-docs/
-sample.env                 # Example environment variables
-```
-
 ## API Surface
 
 - `GET /health` returns an application health probe.
@@ -66,7 +51,7 @@ The frontend expects the browser-facing API at `PUBLIC_API_BASE_URL`, which defa
 Run the API smoke tests with:
 
 ```bash
-.venv/bin/python -m unittest tests.test_api_spike
+uv run unittest tests.test_api_spike
 ```
 
 ## Docker

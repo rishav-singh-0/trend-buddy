@@ -15,7 +15,24 @@ This file is the working guide for AI agents contributing to `trend-buddy`.
 
 - Package Manager: uv (app python commands must use `uv run`)
 - Container entrypoint: `Dockerfile`
+- Node and npm is only available inside docker not on host
 - Default API port: `3000`
+- Default frontend port: `5173`
+
+## Repository Layout
+
+```text
+apps/
+  api/                      # FastAPI app, routers, realtime endpoint
+  frontend/                 # SvelteKit dashboard shell
+packages/
+  shared/
+    config/                # Environment-backed runtime settings
+    contracts/             # Typed API response models
+tests/                     # Stdlib smoke tests for the API spike
+docs/
+sample.env                 # Example environment variables
+```
 
 ## Domain flow
 
@@ -55,3 +72,14 @@ This file is the working guide for AI agents contributing to `trend-buddy`.
 ### `packages/core/analytics`
 - Produces advisory insights only.
 - Must never place orders or bypass risk.
+
+## Commit Format
+- Type can be `feat`, `refactor`, `docs`, `fix` or `chore`
+- Can also contain option eg. `feat(ui)` or `fix(api)`, here element inside brackets specify which particular thing this commit is about
+
+```text
+feat: Heading with capital starting letter
+
+- description point 1
+- description point 2
+```

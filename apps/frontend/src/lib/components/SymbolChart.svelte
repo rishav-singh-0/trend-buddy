@@ -1,13 +1,23 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { getApiBaseUrl } from '$lib/api';
-	import type { MarketCandle, MarketCandlesResponse } from '$lib/types';
-	import { onDestroy, onMount } from 'svelte';
+	import {
+		buildIndicatorSeries,
+		getChartIndicatorById,
+		type ChartIndicatorId
+	} from '$lib/chart/indicators';
+	import type { HoveredCandle, MarketCandle, MarketCandlesResponse } from '$lib/types';
+	import { createEventDispatcher, onDestroy, onMount } from 'svelte';
 
 	export let symbol: string;
 	export let activePrice: number | null = null;
 	export let interval = '1D';
 	export let height = 560;
+	export let indicators: ChartIndicatorId[] = [];
+
+	const dispatch = createEventDispatcher<{
+		hover: HoveredCandle | null;
+	}>();
 
 	let container: HTMLDivElement;
 	let chartApi: any = null;
@@ -19,6 +29,7 @@
 	let error = '';
 	let candles: MarketCandle[] = [];
 	let lastLoadedKey = '';
+	const indicatorSeries = new Map<string, any>();
 
 	async function ensureChart() {
 		if (!browser || !container || chartApi) {
@@ -33,7 +44,8 @@
 			height,
 			layout: {
 				background: { type: ColorType.Solid, color: '#171b26' },
-				textColor: '#848995'
+				textColor: '#848995',
+				attributionLogo: false
 			},
 			grid: {
 				vertLines: { color: '#232836' },
@@ -73,6 +85,22 @@
 				top: 0.78,
 				bottom: 0
 			}
+		});
+
+		chartApi.subscribeCrosshairMove((param: any) => {
+			const bar = param?.seriesData?.get(candlestickSeries);
+			if (!bar || typeof bar.open !== 'number') {
+				dispatch('hover', null);
+				return;
+			}
+
+			dispatch('hover', {
+				time: Number(param.time ?? 0),
+				open: bar.open,
+				high: bar.high,
+				low: bar.low,
+				close: bar.close
+			});
 		});
 
 		resizeObserver = new ResizeObserver(() => {
@@ -117,12 +145,50 @@
 					color: candle.close >= candle.open ? 'rgba(38, 166, 154, 0.55)' : 'rgba(239, 83, 80, 0.55)'
 				}))
 			);
+			syncIndicatorSeries();
 			chartApi?.timeScale().fitContent();
 			lastLoadedKey = requestKey;
 		} catch (caughtError) {
 			error = caughtError instanceof Error ? caughtError.message : 'Unable to load candles.';
 		} finally {
 			loading = false;
+		}
+	}
+
+	function syncIndicatorSeries() {
+		if (!chartApi || !chartLibrary || !candles.length) {
+			return;
+		}
+
+		const { LineSeries } = chartLibrary;
+		const nextIndicatorIds = new Set(indicators);
+
+		for (const [indicatorId, series] of indicatorSeries.entries()) {
+			if (!nextIndicatorIds.has(indicatorId as ChartIndicatorId)) {
+				chartApi.removeSeries(series);
+				indicatorSeries.delete(indicatorId);
+			}
+		}
+
+		for (const indicatorId of indicators) {
+			const indicator = getChartIndicatorById(indicatorId);
+			if (!indicator) {
+				continue;
+			}
+
+			let series = indicatorSeries.get(indicatorId);
+			if (!series) {
+				series = chartApi.addSeries(LineSeries, {
+					color: indicator.color,
+					lineWidth: 2,
+					priceLineVisible: false,
+					lastValueVisible: false,
+					crosshairMarkerVisible: false
+				});
+				indicatorSeries.set(indicatorId, series);
+			}
+
+			series.setData(buildIndicatorSeries(indicator, candles));
 		}
 	}
 
@@ -141,6 +207,7 @@
 	});
 
 	onDestroy(() => {
+		dispatch('hover', null);
 		resizeObserver?.disconnect();
 		chartApi?.remove();
 	});
@@ -151,6 +218,7 @@
 
 	$: if (browser && chartApi) {
 		updatePriceLine();
+		syncIndicatorSeries();
 	}
 </script>
 

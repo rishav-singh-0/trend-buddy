@@ -45,6 +45,14 @@ export type MarketCandlesResponse = {
 	candles: MarketCandle[];
 };
 
+export type HoveredCandle = {
+	time: number;
+	open: number;
+	high: number;
+	low: number;
+	close: number;
+};
+
 export type ApiHealth = {
 	status: string;
 };

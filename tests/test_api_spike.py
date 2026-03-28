@@ -14,6 +14,13 @@ class ApiSpikeTests(unittest.TestCase):
         self.assertIsInstance(snapshot.price, float)
         self.assertIn(snapshot.signal, {"watch", "hedge"})
 
+    def test_market_snapshot_json_dump_serializes_datetime(self) -> None:
+        snapshot = build_market_snapshot(symbol="INFY")
+        payload = snapshot.model_dump(mode="json")
+
+        self.assertIsInstance(payload["generated_at"], str)
+        self.assertEqual(payload["symbol"], "INFY")
+
     def test_portfolio_summary_contract(self) -> None:
         summary = build_portfolio_summary()
         self.assertGreater(summary.total_value, 0)

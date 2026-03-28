@@ -49,7 +49,7 @@ def create_app() -> FastAPI:
         try:
             while True:
                 snapshot = build_market_snapshot(symbol=symbol, tick=tick)
-                await websocket.send_json(snapshot.model_dump())
+                await websocket.send_json(snapshot.model_dump(mode="json"))
                 tick += 1
                 await asyncio.sleep(1)
         except WebSocketDisconnect:

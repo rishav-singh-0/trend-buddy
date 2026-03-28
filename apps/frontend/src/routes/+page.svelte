@@ -1,24 +1,48 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { getWebSocketBaseUrl } from '$lib/api';
+	import {
+		CHART_INDICATORS,
+		DEFAULT_CHART_INDICATORS,
+		getChartIndicatorById,
+		type ChartIndicatorId
+	} from '$lib/chart/indicators';
+	import PickerModal, { type PickerItem } from '$lib/components/PickerModal.svelte';
 	import SymbolChart from '$lib/components/SymbolChart.svelte';
-	import type { MarketSnapshot, PortfolioHolding, PortfolioSummary } from '$lib/types';
-	import { onDestroy } from 'svelte';
+	import type { HoveredCandle, MarketSnapshot, PortfolioHolding, PortfolioSummary } from '$lib/types';
+	import { onDestroy, onMount } from 'svelte';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
 
-	let liveTick: MarketSnapshot | null = null;
-	let connectionState = 'connecting';
-	let selectedSymbol = '';
-	let currentInterval = '1D';
-	let chartStage: HTMLElement | null = null;
-	let socket: WebSocket | null = null;
-	let activeSocketSymbol = '';
+	const STORAGE_KEYS = {
+		symbol: 'trend-buddy:selected-symbol',
+		interval: 'trend-buddy:selected-interval',
+		indicators: 'trend-buddy:selected-indicators'
+	};
 
 	const topNav = ['Dashboard', 'Market Data', 'Portfolio', 'Strategies', 'Backtests', 'Analysis'];
 	const pageTabs = ['1', '2', '3', '4'];
-	const chartIntervals = ['1D', '1W', '1M'];
+	const chartIntervals = [
+		{ value: '1D', label: '1D', detail: 'Daily candles' },
+		{ value: '1W', label: '1W', detail: 'Weekly candles' },
+		{ value: '1M', label: '1M', detail: 'Monthly candles' }
+	] as const;
+
+	let liveTick: MarketSnapshot | null = null;
+	let connectionState = 'connecting';
+	let selectedSymbol = '';
+	let currentInterval: (typeof chartIntervals)[number]['value'] = '1D';
+	let activeIndicatorIds: ChartIndicatorId[] = [...DEFAULT_CHART_INDICATORS];
+	let hoveredCandle: HoveredCandle | null = null;
+	let chartStage: HTMLElement | null = null;
+	let socket: WebSocket | null = null;
+	let activeSocketSymbol = '';
+	let preferencesHydrated = !browser;
+	let isSymbolModalOpen = false;
+	let isIndicatorModalOpen = false;
+	let symbolQuery = '';
+	let indicatorQuery = '';
 
 	const formatCurrency = (value: number, maximumFractionDigits = 2) =>
 		new Intl.NumberFormat('en-IN', {
@@ -82,32 +106,106 @@
 		return (holding.allocation_pct / 100) * totalValue;
 	}
 
-	$: summary = data.summary;
-	$: health = data.health;
-	$: initialSnapshot = data.snapshot;
-	$: holdings = summary?.holdings ?? [];
-	$: curve = summary?.equity_curve ?? [];
-	$: sortedHoldings = [...holdings].sort((left, right) => right.allocation_pct - left.allocation_pct);
-	$: watchlist = sortedHoldings.slice(0, 4);
-	$: if (!selectedSymbol) {
-		selectedSymbol = watchlist[0]?.symbol ?? initialSnapshot?.symbol ?? 'NSE:NIFTY50';
+	function buildSymbolDirectory(
+		holdings: PortfolioHolding[],
+		snapshot: MarketSnapshot | null
+	): PickerItem[] {
+		const seen = new Set<string>();
+		const items: PickerItem[] = [];
+
+		for (const holding of holdings) {
+			if (seen.has(holding.symbol)) {
+				continue;
+			}
+
+			seen.add(holding.symbol);
+			items.push({
+				id: holding.symbol,
+				label: holding.symbol,
+				meta: holding.sector,
+				description: `${holding.allocation_pct.toFixed(1)}% allocation`,
+				badge: 'Holding'
+			});
+		}
+
+		if (snapshot?.symbol && !seen.has(snapshot.symbol)) {
+			seen.add(snapshot.symbol);
+			items.push({
+				id: snapshot.symbol,
+				label: snapshot.symbol,
+				meta: snapshot.signal,
+				description: 'Live market snapshot',
+				badge: 'Feed'
+			});
+		}
+
+		if (!items.length) {
+			items.push({
+				id: 'NSE:NIFTY50',
+				label: 'NSE:NIFTY50',
+				meta: 'Fallback market',
+				description: 'Synthetic market stream',
+				badge: 'Default'
+			});
+		}
+
+		return items;
 	}
-	$: selectedHolding = sortedHoldings.find((holding) => holding.symbol === selectedSymbol) ?? null;
-	$: serverSnapshot = initialSnapshot?.symbol === selectedSymbol ? initialSnapshot : null;
-	$: activeSnapshot = liveTick ?? serverSnapshot;
-	$: openingBalance = getOpeningBalance(summary);
-	$: usedCapital = summary ? Math.max(summary.total_value - summary.cash_balance, 0) : 0;
-	$: holdingsCurrentValue = summary?.total_value ?? 0;
-	$: holdingsInvestment = summary ? Math.max(summary.total_value - summary.total_pnl, 0) : 0;
-	$: holdingsPnlPct =
-		holdingsInvestment > 0 ? ((holdingsCurrentValue - holdingsInvestment) / holdingsInvestment) * 100 : 0;
-	$: totalAllocation = sortedHoldings.reduce((sum, holding) => sum + holding.allocation_pct, 0);
-	$: holdingsChartPath = buildChartPath(curve.map((point) => point.close), 460, 136, 18);
-	$: topHolding = sortedHoldings[0] ?? null;
-	$: firstSession = curve[0]?.session ?? '--';
-	$: middleSession = curve[Math.floor(curve.length / 2)]?.session ?? '--';
-	$: lastSession = curve[curve.length - 1]?.session ?? '--';
-	$: selectedSymbolPrice = activeSnapshot?.price ?? (selectedHolding ? getHoldingValue(selectedHolding, holdingsCurrentValue) : null);
+
+	function isValidInterval(value: string): value is (typeof chartIntervals)[number]['value'] {
+		return chartIntervals.some((interval) => interval.value === value);
+	}
+
+	function readStoredIndicators(): ChartIndicatorId[] {
+		if (!browser) {
+			return [...DEFAULT_CHART_INDICATORS];
+		}
+
+		try {
+			const rawValue = window.localStorage.getItem(STORAGE_KEYS.indicators);
+			if (!rawValue) {
+				return [...DEFAULT_CHART_INDICATORS];
+			}
+
+			const parsed = JSON.parse(rawValue);
+			if (!Array.isArray(parsed)) {
+				return [...DEFAULT_CHART_INDICATORS];
+			}
+
+			const nextIndicators = parsed.filter((value): value is ChartIndicatorId => Boolean(getChartIndicatorById(value)));
+			return nextIndicators.length ? nextIndicators : [...DEFAULT_CHART_INDICATORS];
+		} catch (error) {
+			console.warn('Failed to parse stored chart indicators.', error);
+			return [...DEFAULT_CHART_INDICATORS];
+		}
+	}
+
+	function closeOverlays() {
+		isSymbolModalOpen = false;
+		isIndicatorModalOpen = false;
+	}
+
+	function shouldIgnoreShortcutTarget(target: EventTarget | null): boolean {
+		const element = target as HTMLElement | null;
+		if (!element) {
+			return false;
+		}
+
+		const tagName = element.tagName;
+		return element.isContentEditable || tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT';
+	}
+
+	function openSymbolSearch() {
+		symbolQuery = '';
+		isIndicatorModalOpen = false;
+		isSymbolModalOpen = true;
+	}
+
+	function openIndicatorSearch() {
+		indicatorQuery = '';
+		isSymbolModalOpen = false;
+		isIndicatorModalOpen = true;
+	}
 
 	function connectMarketStream(symbol: string) {
 		if (!browser || !symbol || activeSocketSymbol === symbol) {
@@ -153,15 +251,120 @@
 
 	function openChartForSymbol(symbol: string) {
 		selectedSymbol = symbol;
+		closeOverlays();
 		chartStage?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 	}
+
+	function toggleIndicator(indicatorId: ChartIndicatorId) {
+		activeIndicatorIds = activeIndicatorIds.includes(indicatorId)
+			? activeIndicatorIds.filter((activeId) => activeId !== indicatorId)
+			: [...activeIndicatorIds, indicatorId];
+	}
+
+	function resetChartWorkspace() {
+		currentInterval = '1D';
+		activeIndicatorIds = [...DEFAULT_CHART_INDICATORS];
+		hoveredCandle = null;
+	}
+
+	onMount(() => {
+		const storedSymbol = window.localStorage.getItem(STORAGE_KEYS.symbol);
+		const storedInterval = window.localStorage.getItem(STORAGE_KEYS.interval);
+		const storedIndicators = readStoredIndicators();
+
+		if (storedSymbol) {
+			selectedSymbol = storedSymbol;
+		}
+
+		if (storedInterval && isValidInterval(storedInterval)) {
+			currentInterval = storedInterval;
+		}
+
+		activeIndicatorIds = storedIndicators;
+		preferencesHydrated = true;
+
+		const handleKeyboardShortcuts = (event: KeyboardEvent) => {
+			if (event.key === 'Escape') {
+				closeOverlays();
+				return;
+			}
+
+			if (shouldIgnoreShortcutTarget(event.target)) {
+				return;
+			}
+
+			if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+				event.preventDefault();
+				openSymbolSearch();
+			}
+		};
+
+		window.addEventListener('keydown', handleKeyboardShortcuts);
+
+		return () => {
+			window.removeEventListener('keydown', handleKeyboardShortcuts);
+		};
+	});
 
 	onDestroy(() => {
 		socket?.close();
 	});
 
+	$: summary = data.summary;
+	$: health = data.health;
+	$: initialSnapshot = data.snapshot;
+	$: holdings = summary?.holdings ?? [];
+	$: curve = summary?.equity_curve ?? [];
+	$: sortedHoldings = [...holdings].sort((left, right) => right.allocation_pct - left.allocation_pct);
+	$: watchlist = sortedHoldings.slice(0, 4);
+	$: symbolDirectory = buildSymbolDirectory(sortedHoldings, initialSnapshot);
+	$: filteredSymbols = symbolDirectory.filter((item) =>
+		`${item.label} ${item.meta ?? ''} ${item.description ?? ''}`.toLowerCase().includes(symbolQuery.trim().toLowerCase())
+	);
+	$: filteredIndicators = CHART_INDICATORS.filter((indicator) =>
+		`${indicator.name} ${indicator.shortLabel} ${indicator.description}`.toLowerCase().includes(indicatorQuery.trim().toLowerCase())
+	).map((indicator) => ({
+		id: indicator.id,
+		label: indicator.shortLabel,
+		meta: indicator.name,
+		description: indicator.description,
+		badge: activeIndicatorIds.includes(indicator.id) ? 'Active' : 'Add'
+	}));
+	$: if (!selectedSymbol) {
+		selectedSymbol = watchlist[0]?.symbol ?? initialSnapshot?.symbol ?? 'NSE:NIFTY50';
+	}
+	$: selectedHolding = sortedHoldings.find((holding) => holding.symbol === selectedSymbol) ?? null;
+	$: serverSnapshot = initialSnapshot?.symbol === selectedSymbol ? initialSnapshot : null;
+	$: activeSnapshot = liveTick ?? serverSnapshot;
+	$: openingBalance = getOpeningBalance(summary);
+	$: usedCapital = summary ? Math.max(summary.total_value - summary.cash_balance, 0) : 0;
+	$: holdingsCurrentValue = summary?.total_value ?? 0;
+	$: holdingsInvestment = summary ? Math.max(summary.total_value - summary.total_pnl, 0) : 0;
+	$: holdingsPnlPct =
+		holdingsInvestment > 0 ? ((holdingsCurrentValue - holdingsInvestment) / holdingsInvestment) * 100 : 0;
+	$: totalAllocation = sortedHoldings.reduce((sum, holding) => sum + holding.allocation_pct, 0);
+	$: holdingsChartPath = buildChartPath(curve.map((point) => point.close), 460, 136, 18);
+	$: topHolding = sortedHoldings[0] ?? null;
+	$: firstSession = curve[0]?.session ?? '--';
+	$: middleSession = curve[Math.floor(curve.length / 2)]?.session ?? '--';
+	$: lastSession = curve[curve.length - 1]?.session ?? '--';
+	$: selectedSymbolPrice = activeSnapshot?.price ?? (selectedHolding ? getHoldingValue(selectedHolding, holdingsCurrentValue) : null);
+	$: currentIntervalDetail = chartIntervals.find((interval) => interval.value === currentInterval)?.detail ?? 'Daily candles';
+	$: activeIndicators = activeIndicatorIds
+		.map((indicatorId) => getChartIndicatorById(indicatorId))
+		.filter((indicator): indicator is NonNullable<ReturnType<typeof getChartIndicatorById>> => Boolean(indicator));
+
 	$: if (browser && selectedSymbol) {
 		connectMarketStream(selectedSymbol);
+	}
+
+	$: if (browser && preferencesHydrated && selectedSymbol) {
+		window.localStorage.setItem(STORAGE_KEYS.symbol, selectedSymbol);
+	}
+
+	$: if (browser && preferencesHydrated) {
+		window.localStorage.setItem(STORAGE_KEYS.interval, currentInterval);
+		window.localStorage.setItem(STORAGE_KEYS.indicators, JSON.stringify(activeIndicatorIds));
 	}
 </script>
 
@@ -219,11 +422,13 @@
 
 	<div class="content-shell">
 		<aside class="marketwatch">
-			<div class="search-box">
+			<button class="search-box" type="button" on:click={openSymbolSearch}>
 				<span class="search-icon"></span>
-				<input type="text" placeholder="Search symbols, holdings, strategies, backtests" />
+				<span class="search-placeholder">
+					{selectedSymbol ? `Jump to ${selectedSymbol}` : 'Search symbols, holdings, strategies, backtests'}
+				</span>
 				<kbd>Ctrl + K</kbd>
-			</div>
+			</button>
 
 			<div class="watchlist-meta">
 				<span>Holdings watchlist ({watchlist.length} / {holdings.length || 0})</span>
@@ -305,46 +510,80 @@
 								<div class="selected-symbol">
 									<h2>{selectedSymbol}</h2>
 									<span>{selectedHolding?.sector ?? activeSnapshot?.signal ?? 'Market data view'}</span>
+									<small>{currentIntervalDetail}</small>
 								</div>
 								<div class="interval-tabs">
 									{#each chartIntervals as interval}
 										<button
-											class:active={currentInterval === interval}
+											class:active={currentInterval === interval.value}
 											type="button"
 											on:click={() => {
-												currentInterval = interval;
+												currentInterval = interval.value;
 											}}
 										>
-											{interval}
+											{interval.label}
 										</button>
 									{/each}
 								</div>
 							</div>
 
 							<div class="toolbar-right">
-								<button type="button">Indicators</button>
-								<button type="button">Compare</button>
-								<button type="button">Reset</button>
+								<button class:active-filter={isIndicatorModalOpen || activeIndicators.length > 0} type="button" on:click={openIndicatorSearch}>
+									Indicators
+									{#if activeIndicators.length}
+										<strong>{activeIndicators.length}</strong>
+									{/if}
+								</button>
+								<button type="button" on:click={openSymbolSearch}>Symbols</button>
+								<button type="button" on:click={resetChartWorkspace}>Reset</button>
 							</div>
 						</div>
 
 						<div class="chart-stats">
 							<div class="stat-pill buy">
-								<span>{selectedSymbolPrice ? selectedSymbolPrice.toFixed(2) : '--'}</span>
-								<strong>BUY</strong>
-							</div>
-							<div class="stat-pill sell">
-								<span>{selectedSymbolPrice ? selectedSymbolPrice.toFixed(2) : '--'}</span>
-								<strong>SELL</strong>
-							</div>
+									<span>{selectedSymbolPrice ? selectedSymbolPrice.toFixed(2) : '--'}</span>
+									<strong>BUY</strong>
+								</div>
+								<div class="stat-pill sell">
+									<span>{selectedSymbolPrice ? selectedSymbolPrice.toFixed(2) : '--'}</span>
+									<strong>SELL</strong>
+								</div>
 							<div class="chart-meta">
 								<p><span>Signal</span><strong>{activeSnapshot?.signal ?? '--'}</strong></p>
 								<p><span>WebSocket</span><strong>{connectionState}</strong></p>
 								<p><span>Updated</span><strong>{formatTime(activeSnapshot?.generated_at)}</strong></p>
+								<p><span>Open</span><strong>{hoveredCandle ? hoveredCandle.open.toFixed(2) : '--'}</strong></p>
+								<p><span>High</span><strong>{hoveredCandle ? hoveredCandle.high.toFixed(2) : '--'}</strong></p>
+								<p><span>Low</span><strong>{hoveredCandle ? hoveredCandle.low.toFixed(2) : '--'}</strong></p>
+								<p><span>Close</span><strong>{hoveredCandle ? hoveredCandle.close.toFixed(2) : '--'}</strong></p>
 							</div>
 						</div>
 
-						<SymbolChart symbol={selectedSymbol} activePrice={selectedSymbolPrice} interval={currentInterval} />
+						{#if activeIndicators.length}
+							<div class="indicator-strip" aria-label="Active chart indicators">
+								{#each activeIndicators as indicator}
+									<button
+										type="button"
+										class="indicator-chip"
+										style={`--indicator-color:${indicator.color};`}
+										on:click={() => toggleIndicator(indicator.id)}
+									>
+										<span>{indicator.shortLabel}</span>
+										<strong>Remove</strong>
+									</button>
+								{/each}
+							</div>
+						{/if}
+
+						<SymbolChart
+							symbol={selectedSymbol}
+							activePrice={selectedSymbolPrice}
+							interval={currentInterval}
+							indicators={activeIndicatorIds}
+							on:hover={(event) => {
+								hoveredCandle = event.detail;
+							}}
+						/>
 					</div>
 
 					<aside class="chart-sidebar">
@@ -522,10 +761,44 @@
 				</div>
 			</section>
 		</main>
+		</div>
 	</div>
-</div>
 
-<style>
+	<PickerModal
+		open={isSymbolModalOpen}
+		title="Symbol Search"
+		placeholder="Search symbols, sectors, holdings"
+		query={symbolQuery}
+		items={filteredSymbols}
+		selectedId={selectedSymbol}
+		emptyMessage="No symbols match the current workspace."
+		on:close={closeOverlays}
+		on:queryChange={(event) => {
+			symbolQuery = event.detail;
+		}}
+		on:select={(event) => {
+			openChartForSymbol(event.detail);
+		}}
+	/>
+
+	<PickerModal
+		open={isIndicatorModalOpen}
+		title="Indicator Search"
+		placeholder="Search overlays like SMA or EMA"
+		query={indicatorQuery}
+		items={filteredIndicators}
+		selectedId=""
+		emptyMessage="No overlays match the current search."
+		on:close={closeOverlays}
+		on:queryChange={(event) => {
+			indicatorQuery = event.detail;
+		}}
+		on:select={(event) => {
+			toggleIndicator(event.detail as ChartIndicatorId);
+		}}
+	/>
+
+	<style>
 	:global(body) {
 		margin: 0;
 		background: #0f0f10;
@@ -708,18 +981,26 @@
 		border-right: 1px solid #242426;
 	}
 
-	.search-box {
-		height: 40px;
-		display: grid;
-		grid-template-columns: 18px minmax(0, 1fr) auto;
-		align-items: center;
-		gap: 10px;
-		padding: 0 10px;
-		border: 1px solid #28282b;
-		border-radius: 3px;
-		background: #151516;
-		color: #6e6f74;
-	}
+		.search-box {
+			width: 100%;
+			height: 40px;
+			display: grid;
+			grid-template-columns: 18px minmax(0, 1fr) auto;
+			align-items: center;
+			gap: 10px;
+			padding: 0 10px;
+			border: 1px solid #28282b;
+			border-radius: 3px;
+			background: #151516;
+			color: #6e6f74;
+			cursor: pointer;
+			text-align: left;
+		}
+
+		.search-box:focus-visible {
+			outline: 1px solid #4f84ff;
+			outline-offset: 2px;
+		}
 
 	.search-icon {
 		width: 10px;
@@ -740,13 +1021,10 @@
 		transform: rotate(45deg);
 	}
 
-	.search-box input {
-		border: none;
-		outline: none;
-		background: transparent;
-		color: #9e9fa4;
-		font-size: 13px;
-	}
+		.search-placeholder {
+			color: #9e9fa4;
+			font-size: 13px;
+		}
 
 	.search-box kbd {
 		padding: 3px 8px;
@@ -1061,27 +1339,51 @@
 		gap: 4px;
 	}
 
-	.selected-symbol span {
-		color: #7a7d85;
-		font-size: 12px;
-	}
+		.selected-symbol span {
+			color: #7a7d85;
+			font-size: 12px;
+		}
 
-	.interval-tabs,
-	.toolbar-right {
-		display: flex;
-		align-items: center;
-		gap: 14px;
-	}
+		.selected-symbol small {
+			color: #5f87ff;
+			font-size: 11px;
+			text-transform: uppercase;
+			letter-spacing: 0.08em;
+		}
 
-	.interval-tabs button,
-	.toolbar-right button {
-		font-size: 12px;
-	}
+		.interval-tabs,
+		.toolbar-right {
+			display: flex;
+			align-items: center;
+			gap: 14px;
+			flex-wrap: wrap;
+		}
 
-	.interval-tabs button.active,
-	.toolbar-right button:hover {
-		color: #d17a55;
-	}
+		.interval-tabs button,
+		.toolbar-right button {
+			font-size: 12px;
+		}
+
+		.toolbar-right button {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		.toolbar-right button strong {
+			padding: 2px 6px;
+			border-radius: 999px;
+			background: #242937;
+			color: #84a5ff;
+			font-size: 11px;
+			font-weight: 600;
+		}
+
+		.interval-tabs button.active,
+		.toolbar-right button:hover,
+		.toolbar-right button.active-filter {
+			color: #d17a55;
+		}
 
 	.chart-stats {
 		gap: 14px;
@@ -1115,21 +1417,75 @@
 		background: #d77a4f;
 	}
 
-	.chart-meta {
-		gap: 24px;
-		margin-left: auto;
-	}
+		.chart-meta {
+			gap: 24px;
+			margin-left: auto;
+			flex-wrap: wrap;
+			justify-content: flex-end;
+		}
 
 	.chart-meta p {
 		display: grid;
 		gap: 4px;
 	}
 
-	.chart-meta span,
-	.health-state p {
-		color: #777a82;
-		font-size: 12px;
-	}
+		.chart-meta span,
+		.health-state p {
+			color: #777a82;
+			font-size: 12px;
+		}
+
+		.indicator-strip {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 10px;
+		}
+
+		.indicator-chip {
+			display: inline-flex;
+			align-items: center;
+			gap: 10px;
+			padding: 8px 12px;
+			border: 1px solid rgba(92, 127, 255, 0.24);
+			border-left: 3px solid var(--indicator-color);
+			border-radius: 10px;
+			background: rgba(18, 21, 30, 0.88);
+			color: #d5dff7;
+			cursor: pointer;
+		}
+
+		.indicator-chip span,
+		.indicator-chip strong {
+			margin: 0;
+		}
+
+		.indicator-chip span {
+			font-size: 12px;
+		}
+
+		.indicator-chip strong {
+			color: #7f8ca8;
+			font-size: 11px;
+			font-weight: 500;
+			text-transform: uppercase;
+			letter-spacing: 0.08em;
+		}
+
+		.chart-attribution {
+			margin-top: -4px;
+			color: #676d7c;
+			font-size: 11px;
+			line-height: 1.5;
+		}
+
+		.chart-attribution a {
+			color: #8aa8ff;
+			text-decoration: none;
+		}
+
+		.chart-attribution a:hover {
+			text-decoration: underline;
+		}
 
 	.health-state {
 		display: grid;
