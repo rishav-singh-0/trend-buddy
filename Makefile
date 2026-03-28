@@ -1,5 +1,7 @@
 # Simple Makefile for a Go project
 
+COMPOSE_CMD := $(shell if docker compose version >/dev/null 2>&1; then echo "docker compose"; else echo "docker-compose"; fi)
+
 # Build the application
 all: build test
 
@@ -8,28 +10,27 @@ build:
 
 	@CGO_ENABLED=1 go build -o main cmd/api/main.go
 
-# Run the application
+# Build Docker images
+docker-build:
+	@$(COMPOSE_CMD) build
+
+# Build only the frontend image
+frontend-build:
+	@$(COMPOSE_CMD) build frontend
+
+# Run the application locally
 run:
 	@go run cmd/api/main.go &
 	@npm install --prefer-offline --no-fund --prefix ./frontend
 	@npm run dev --prefix ./frontend
-# Create DB container
-docker-run:
-	@if docker compose up --build 2>/dev/null; then \
-		: ; \
-	else \
-		echo "Falling back to Docker Compose V1"; \
-		docker-compose up --build; \
-	fi
 
-# Shutdown DB container
+# Start containers
+docker-run:
+	@$(COMPOSE_CMD) up --build
+
+# Stop containers
 docker-down:
-	@if docker compose down 2>/dev/null; then \
-		: ; \
-	else \
-		echo "Falling back to Docker Compose V1"; \
-		docker-compose down; \
-	fi
+	@$(COMPOSE_CMD) down
 
 # Test the application
 test:
@@ -58,4 +59,4 @@ watch:
             fi; \
         fi
 
-.PHONY: all build run test clean watch
+.PHONY: all build docker-build frontend-build run docker-run docker-down test clean watch
