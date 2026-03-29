@@ -1,6 +1,6 @@
-# Project trend-buddy
+# Trend Buddy
 
-One Paragraph of project description goes here
+Trend Buddy is an open-source trading companion for market analysis, backtesting, portfolio tracking, and automated execution workflows.
 
 ## Getting Started
 
