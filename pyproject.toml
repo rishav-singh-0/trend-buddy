@@ -5,3 +5,14 @@ description = "Trend Buddy is an open-source trading companion for market analys
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = []
+
+[tool.uv.workspace]
+members = [
+    "packages/python",
+    "services/backtesting",
+    "services/strategy-engine",
+    "services/portfolio-analytics",
+]
+
+[tool.uv.sources]
+trend-buddy-shared = { workspace = true }
