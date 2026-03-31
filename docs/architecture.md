@@ -4,7 +4,7 @@
 - `apps/web` contains the Vue frontend.
 - `services/` contains deployable services, with Go used for online latency-sensitive services and Python used for research-heavy modules such as backtesting and analytics.
 - `packages/go` and `packages/python` contain shared contracts, clients and platform helpers.
-- `config/` owns tracked topology plus generated local env files.
+- `config/` owns tracked base env config plus generated local env files.
 - `infra/compose` and `infra/docker` own container orchestration and shared Docker build definitions.
 
 ## Architecture Components

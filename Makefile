@@ -1,62 +1,43 @@
-# Simple Makefile for a Go project
-
 COMPOSE_CMD := $(shell if docker compose version >/dev/null 2>&1; then echo "docker compose"; else echo "docker-compose"; fi)
+COMPOSE_FILES := -f docker-compose.yml -f infra/compose/dev.yml
+ENV_FILE := config/generated/dev.env
+UV_CACHE_DIR ?= /tmp/trend-buddy-uv-cache
+GOCACHE ?= /tmp/trend-buddy-go-build
 
-# Build the application
-all: build test
+all: test-go test-python
 
-build:
-	@echo "Building..."
+run: up logs
 
-	@CGO_ENABLED=1 go build -o main cmd/api/main.go
+generate-env:
+	@UV_CACHE_DIR=$(UV_CACHE_DIR) uv run --no-project python tools/scripts/generate_env.py
 
-# Build Docker images
-docker-build:
-	@$(COMPOSE_CMD) build
+up: generate-env
+	@$(COMPOSE_CMD) $(COMPOSE_FILES) up --build -d
 
-# Build only the frontend image
-frontend-build:
-	@$(COMPOSE_CMD) build frontend
+down:
+	@$(COMPOSE_CMD) $(COMPOSE_FILES) down
 
-# Run the application locally
-run:
-	@go run cmd/api/main.go &
-	@npm install --prefer-offline --no-fund --prefix ./frontend
-	@npm run dev --prefix ./frontend
+logs:
+	@$(COMPOSE_CMD) $(COMPOSE_FILES) logs -f
 
-# Start containers
-docker-run:
-	@$(COMPOSE_CMD) up --build
+ps:
+	@$(COMPOSE_CMD) $(COMPOSE_FILES) ps
 
-# Stop containers
-docker-down:
-	@$(COMPOSE_CMD) down
+build-images: generate-env
+	@$(COMPOSE_CMD) $(COMPOSE_FILES) build
 
-# Test the application
-test:
-	@echo "Testing..."
-	@go test ./... -v
+test-go:
+	@GOCACHE=$(GOCACHE) go test ./...
 
-# Clean the binary
+test-python:
+	@PYTHONPATH=packages/python/src:services/backtesting/src UV_CACHE_DIR=$(UV_CACHE_DIR) uv run --no-project python -m unittest discover services/backtesting/tests
+	@PYTHONPATH=packages/python/src:services/strategy-engine/src UV_CACHE_DIR=$(UV_CACHE_DIR) uv run --no-project python -m unittest discover services/strategy-engine/tests
+	@PYTHONPATH=packages/python/src:services/portfolio-analytics/src UV_CACHE_DIR=$(UV_CACHE_DIR) uv run --no-project python -m unittest discover services/portfolio-analytics/tests
+
+test-integration: generate-env
+	@$(COMPOSE_CMD) $(COMPOSE_FILES) config >/dev/null
+
 clean:
-	@echo "Cleaning..."
-	@rm -f main
+	@rm -f $(ENV_FILE)
 
-# Live Reload
-watch:
-	@if command -v air > /dev/null; then \
-            air; \
-            echo "Watching...";\
-        else \
-            read -p "Go's 'air' is not installed on your machine. Do you want to install it? [Y/n] " choice; \
-            if [ "$$choice" != "n" ] && [ "$$choice" != "N" ]; then \
-                go install github.com/air-verse/air@latest; \
-                air; \
-                echo "Watching...";\
-            else \
-                echo "You chose not to install air. Exiting..."; \
-                exit 1; \
-            fi; \
-        fi
-
-.PHONY: all build docker-build frontend-build run docker-run docker-down test clean watch
+.PHONY: all run generate-env up down logs ps build-images test-go test-python test-integration clean

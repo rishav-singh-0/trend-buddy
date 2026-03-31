@@ -1,25 +1,66 @@
+name: trend-buddy
+
 services:
-  app:
+  api-gateway:
     build:
       context: .
-      dockerfile: Dockerfile
-      target: prod
-    restart: unless-stopped
+      dockerfile: infra/docker/go-service.Dockerfile
+      args:
+        SERVICE_PATH: services/api-gateway/cmd/api-gateway
+        SERVICE_BINARY: api-gateway
+    env_file:
+      - config/generated/dev.env
     ports:
-      - ${PORT}:${PORT}
-    environment:
-      PORT: ${PORT}
-      DB_URL: ${DB_URL}
-    volumes:
-      - sqlite_bp:/app/db
-  frontend:
+      - "8080:8080"
+
+  database-service:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    restart: unless-stopped
+      context: .
+      dockerfile: infra/docker/go-service.Dockerfile
+      args:
+        SERVICE_PATH: services/database-service/cmd/database-service
+        SERVICE_BINARY: database-service
+    env_file:
+      - config/generated/dev.env
     ports:
-      - 5173:5173
+      - "8083:8083"
+    volumes:
+      - db-data:/app/db
+
+  indicator-engine:
+    build:
+      context: .
+      dockerfile: infra/docker/go-service.Dockerfile
+      args:
+        SERVICE_PATH: services/indicator-engine/cmd/indicator-engine
+        SERVICE_BINARY: indicator-engine
+    env_file:
+      - config/generated/dev.env
+    ports:
+      - "8086:8086"
+
+  backtesting:
+    build:
+      context: .
+      dockerfile: infra/docker/python-service.Dockerfile
+      args:
+        SERVICE_PACKAGE: trend-buddy-backtesting
+        SERVICE_MODULE: backtesting.main
+    env_file:
+      - config/generated/dev.env
+    ports:
+      - "8090:8090"
+
+  web:
+    build:
+      context: .
+      dockerfile: infra/docker/web.Dockerfile
+    env_file:
+      - config/generated/dev.env
+    ports:
+      - "5173:5173"
     depends_on:
-      - app
+      - api-gateway
+
 volumes:
-  sqlite_bp:
+  db-data:

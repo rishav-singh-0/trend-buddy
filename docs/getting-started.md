@@ -1,46 +1,50 @@
+## Development workflow
 
-## MakeFile
+The tracked base configuration lives in `config/dev.env`.
 
-Run build make command with tests
+Developer-specific overrides can be added in `config/.env.local` by copying `config/.env.local.example`.
+
+Generate the shared env file from the tracked base env and local overrides:
 ```bash
-make all
+make generate-env
 ```
 
-Build the application
+Start the default local stack with Docker Compose:
 ```bash
-make build
+make up
 ```
 
-Run the application
+Stop the local stack:
 ```bash
-make run
-```
-Create DB container
-```bash
-make docker-run
+make down
 ```
 
-Shutdown DB Container
+Tail service logs:
 ```bash
-make docker-down
+make logs
 ```
 
-DB Integrations Test:
+Show running containers:
 ```bash
-make itest
+make ps
 ```
 
-Live reload the application:
+Build service images:
 ```bash
-make watch
+make build-images
 ```
 
-Run the test suite:
+Run Go tests:
 ```bash
-make test
+make test-go
 ```
 
-Clean up binary from the last build:
+Run Python tests with `uv`:
 ```bash
-make clean
+make test-python
+```
+
+Validate the compose integration wiring:
+```bash
+make test-integration
 ```

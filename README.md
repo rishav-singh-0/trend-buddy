@@ -6,36 +6,36 @@ Trend Buddy is an open-source trading companion for market analysis, backtesting
 
 ```text
 apps
-└── web
+└── web                          # Vue.js frontend application
 services
-├── api-gateway
-├── backtesting
-├── broker-gateway
-├── data-ingestion
-├── database-service
-├── indicator-engine
-├── live-runner
-├── portfolio-analytics
-└── strategy-engine
+├── api-gateway                  # Go – unified REST/WebSocket entry point
+├── backtesting                  # Python – backtest strategies and calculate PnL
+├── broker-gateway               # Go – broker communication (orders, candles, portfolio)
+├── data-ingestion               # Go – historic data fetching & WebSocket candle management
+├── database-service             # Go – sole interface to the database
+├── indicator-engine             # Go – mathematical indicators on candle data
+├── live-runner                  # Go – deploy strategies to paper or live markets
+├── portfolio-analytics          # Python – portfolio-level analytics and reporting
+└── strategy-engine              # Python – composable strategies using indicators & logic
 packages
 ├── go
-│   ├── contracts
-│   └── platform
-└── python
-config
+│   ├── contracts                # Shared Go request/response contracts
+│   └── platform                 # Shared Go platform utilities
+└── python                       # Shared Python library (trend_buddy_shared)
+config                           # Application and environment configuration
 infra
-├── compose
-└── docker
-db
-docs
-└── getting-started.md
-tools
-AGENTS.md
-docker-compose.yml
-go.mod
-go.sum
-Makefile
-README.md
+├── compose                      # Docker Compose override / profile files
+└── docker                       # Dockerfiles for each service
+db                               # Database migrations and seed data
+docs                             # Project documentation
+└── getting-started.md           # Onboarding guide
+tools                            # Developer helper scripts and tooling
+AGENTS.md                        # AI agent / coding guidelines
+docker-compose.yml               # Default development runtime definition
+go.mod                           # Go module definition
+go.sum                           # Go dependency checksums
+Makefile                         # Build, run, and Docker commands (make up, etc.)
+README.md                        # This file – project overview
 ```
 
 ## Runtime Strategy
