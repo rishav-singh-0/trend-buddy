@@ -6,8 +6,8 @@
           <p class="eyebrow">Telemetry feed</p>
           <h2>{{ selectedProbe.label }} endpoint trace</h2>
           <p class="chart-copy">
-            {{ selectedProbe.description }} The latency chart below keeps the root and health probes
-            visible together so the backend drift is easy to spot.
+            {{ selectedProbe.description }} The latency chart tracks the gateway health endpoint so
+            frontend telemetry stays scoped to the API boundary.
           </p>
         </div>
 

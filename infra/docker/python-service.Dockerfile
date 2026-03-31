@@ -1,8 +1,10 @@
-FROM python:3.9-slim AS runtime
+FROM python:3.12-slim AS runtime
 ARG SERVICE_PACKAGE
 ARG SERVICE_MODULE
 
 WORKDIR /workspace
+ENV SERVICE_PACKAGE=${SERVICE_PACKAGE}
+ENV SERVICE_MODULE=${SERVICE_MODULE}
 
 RUN pip install --no-cache-dir uv
 

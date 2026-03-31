@@ -15,7 +15,6 @@ class Handler(BaseHTTPRequestHandler):
         payload = HealthResponse(
             service="backtesting",
             status="ok",
-            details={"runtime": "python", "role": "historical-simulation"},
         )
         body = json.dumps(payload.__dict__).encode("utf-8")
         self.send_response(200)

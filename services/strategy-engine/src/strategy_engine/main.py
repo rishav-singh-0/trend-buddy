@@ -15,7 +15,6 @@ class Handler(BaseHTTPRequestHandler):
         payload = HealthResponse(
             service="strategy-engine",
             status="ok",
-            details={"runtime": "python", "role": "strategy-definition"},
         )
         body = json.dumps(payload.__dict__).encode("utf-8")
         self.send_response(200)

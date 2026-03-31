@@ -11,7 +11,11 @@ import (
 
 func main() {
 	cfg := config.Load()
-	service := app.New(cfg.ServiceName)
+	service := app.New(cfg.ServiceName, []app.Dependency{
+		{Name: "database-service", URL: cfg.DatabaseServiceURL},
+		{Name: "indicator-engine", URL: cfg.IndicatorEngineURL},
+		{Name: "backtesting", URL: cfg.BacktestingServiceURL},
+	})
 	handler := transporthttp.NewHandler(service)
 	server := httpx.NewServer(cfg.Port, handler.RegisterRoutes())
 

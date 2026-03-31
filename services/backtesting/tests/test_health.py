@@ -8,10 +8,8 @@ class HealthResponseTest(unittest.TestCase):
         response = HealthResponse(
             service="backtesting",
             status="ok",
-            details={"runtime": "python"},
         )
 
         self.assertEqual(response.service, "backtesting")
         self.assertEqual(response.status, "ok")
-        self.assertIn("runtime", response.details)
-        self.assertEqual(response.details["runtime"], "python")
+        self.assertEqual(response.checks, {})

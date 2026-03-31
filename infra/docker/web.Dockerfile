@@ -17,5 +17,7 @@ RUN npm config set registry https://artifactory.arm.com/artifactory/api/npm/mirr
 RUN npm install -g serve
 
 COPY --from=build /app/dist /app/dist
+COPY infra/docker/web-entrypoint.sh /usr/local/bin/web-entrypoint.sh
+RUN chmod +x /usr/local/bin/web-entrypoint.sh
 
-CMD ["serve", "-s", "/app/dist", "-l", "5173"]
+CMD ["/usr/local/bin/web-entrypoint.sh"]

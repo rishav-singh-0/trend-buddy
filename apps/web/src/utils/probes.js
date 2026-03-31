@@ -1,20 +1,13 @@
 export const PROBE_OPTIONS = [
-  { label: 'Root', value: 'root' },
-  { label: 'Health', value: 'health' },
+  { label: 'Gateway Health', value: 'health' },
 ];
 
 export const PROBE_CONFIG = {
-  root: {
-    label: 'Root',
-    path: '/',
-    accent: '#57e3b0',
-    description: 'Base handshake for the Go API.',
-  },
   health: {
-    label: 'Health',
+    label: 'Gateway Health',
     path: '/health',
     accent: '#ff9466',
-    description: 'Database health and pool telemetry.',
+    description: 'Aggregated API gateway health across downstream services.',
   },
 };
 

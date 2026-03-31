@@ -1,9 +1,9 @@
 from dataclasses import dataclass, field
-from typing import Dict
+from typing import Dict, Any
 
 
 @dataclass
 class HealthResponse:
     service: str
     status: str
-    details: Dict[str, str] = field(default_factory=dict)
+    checks: Dict[str, Any] = field(default_factory=dict)

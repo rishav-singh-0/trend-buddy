@@ -13,8 +13,8 @@
       </div>
 
       <p class="brand-copy">
-        Vue rebuild of the frontend, shaped around the algotrader layout: a top bar, a live
-        telemetry chart, and a compact signal stack for backend responses.
+        Vue telemetry surface for the API gateway health endpoint, with downstream service status
+        rolled up by the gateway instead of probed directly from the browser.
       </p>
     </div>
 

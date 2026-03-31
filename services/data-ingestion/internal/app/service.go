@@ -14,6 +14,5 @@ func (s *Service) Health() httpcontracts.HealthResponse {
 	return httpcontracts.HealthResponse{
 		Service: s.name,
 		Status:  "ok",
-		Details: map[string]string{"role": "market-data-ingestion"},
 	}
 }

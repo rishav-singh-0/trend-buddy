@@ -4,7 +4,7 @@ import { STORAGE_KEYS, getStoredState, setStoredState } from '@/utils/localStora
 import { PROBE_OPTIONS } from '@/utils/probes';
 
 function findProbe(value) {
-  return PROBE_OPTIONS.find((option) => option.value === value) ?? PROBE_OPTIONS[1];
+  return PROBE_OPTIONS.find((option) => option.value === value) ?? PROBE_OPTIONS[0];
 }
 
 export const useCurrentEndpointStore = defineStore('currentEndpoint', {

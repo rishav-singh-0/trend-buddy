@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia';
 
 import { PROBE_CONFIG, PROBE_OPTIONS, createProbeUrl, normalizeBaseUrl } from '@/utils/probes';
+import { resolveApiBaseUrl } from '@/utils/runtimeConfig';
 
-const DEFAULT_API_BASE_URL = 'http://localhost:8081';
 const HISTORY_LIMIT = 16;
 const SAMPLE_LIMIT = 48;
 
@@ -101,13 +101,9 @@ function buildHistoryEntry({ key, url, status, checkedAt, latencyMs, code, messa
   };
 }
 
-function resolveApiBaseUrl() {
-  return normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL);
-}
-
 export const useProbeTelemetryStore = defineStore('probeTelemetry', {
   state: () => ({
-    apiBaseUrl: resolveApiBaseUrl(),
+    apiBaseUrl: normalizeBaseUrl(resolveApiBaseUrl()),
     records: createInitialRecords(),
     history: [],
     pendingCount: 0,
