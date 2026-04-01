@@ -12,6 +12,8 @@ func (h *Handler) RegisterRoutes() http.Handler {
 	mux.HandleFunc("/", h.helloWorldHandler)
 	mux.HandleFunc("/api/v1/health", h.healthHandler)
 	mux.HandleFunc("/health", h.healthHandler)
+	mux.HandleFunc("/api/v1/ready", h.readyHandler)
+	mux.HandleFunc("/ready", h.readyHandler)
 
 	return h.corsMiddleware(mux)
 }
@@ -38,4 +40,8 @@ func (h *Handler) helloWorldHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) healthHandler(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, h.service.Health())
+}
+
+func (h *Handler) readyHandler(w http.ResponseWriter, r *http.Request) {
+	httpx.WriteJSON(w, http.StatusOK, h.service.Ready())
 }

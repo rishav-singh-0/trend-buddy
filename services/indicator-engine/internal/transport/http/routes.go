@@ -9,6 +9,7 @@ import (
 
 type Service interface {
 	Health() httpcontracts.HealthResponse
+	Ready() httpcontracts.HealthResponse
 }
 
 type Handler struct {
@@ -22,9 +23,16 @@ func NewHandler(service Service) *Handler {
 func (h *Handler) RegisterRoutes() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", h.healthHandler)
+	mux.HandleFunc("/api/v1/health", h.healthHandler)
+	mux.HandleFunc("/ready", h.readyHandler)
+	mux.HandleFunc("/api/v1/ready", h.readyHandler)
 	return mux
 }
 
 func (h *Handler) healthHandler(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, h.service.Health())
+}
+
+func (h *Handler) readyHandler(w http.ResponseWriter, r *http.Request) {
+	httpx.WriteJSON(w, http.StatusOK, h.service.Ready())
 }

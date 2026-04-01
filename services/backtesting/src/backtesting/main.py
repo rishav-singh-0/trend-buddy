@@ -7,7 +7,7 @@ from trend_buddy_shared.config.env import getenv
 
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802
-        if self.path not in {"/health", "/api/v1/health"}:
+        if self.path not in {"/health", "/api/v1/health", "/ready", "/api/v1/ready"}:
             self.send_response(404)
             self.end_headers()
             return

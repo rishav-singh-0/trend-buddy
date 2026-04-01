@@ -38,11 +38,32 @@ func TestServiceHealthAggregatesDependencies(t *testing.T) {
 					`{"service":"database-service","status":"ok"}`,
 				)),
 			},
+			"http://data-ingestion:8084/health": {
+				StatusCode: http.StatusOK,
+				Status:     "200 OK",
+				Body: io.NopCloser(strings.NewReader(
+					`{"service":"data-ingestion","status":"ok"}`,
+				)),
+			},
+			"http://broker-gateway:8085/health": {
+				StatusCode: http.StatusOK,
+				Status:     "200 OK",
+				Body: io.NopCloser(strings.NewReader(
+					`{"service":"broker-gateway","status":"ok"}`,
+				)),
+			},
 			"http://indicator-engine:8086/health": {
 				StatusCode: http.StatusOK,
 				Status:     "200 OK",
 				Body: io.NopCloser(strings.NewReader(
 					`{"service":"indicator-engine","status":"ok"}`,
+				)),
+			},
+			"http://live-runner:8087/health": {
+				StatusCode: http.StatusOK,
+				Status:     "200 OK",
+				Body: io.NopCloser(strings.NewReader(
+					`{"service":"live-runner","status":"ok"}`,
 				)),
 			},
 			"http://backtesting:8090/health": {
@@ -52,11 +73,30 @@ func TestServiceHealthAggregatesDependencies(t *testing.T) {
 					`{"service":"backtesting","status":"down"}`,
 				)),
 			},
+			"http://strategy-engine:8091/health": {
+				StatusCode: http.StatusOK,
+				Status:     "200 OK",
+				Body: io.NopCloser(strings.NewReader(
+					`{"service":"strategy-engine","status":"ok"}`,
+				)),
+			},
+			"http://portfolio-analytics:8092/health": {
+				StatusCode: http.StatusOK,
+				Status:     "200 OK",
+				Body: io.NopCloser(strings.NewReader(
+					`{"service":"portfolio-analytics","status":"ok"}`,
+				)),
+			},
 		},
 	}, []Dependency{
 		{Name: "database-service", URL: "http://database-service:8083"},
+		{Name: "data-ingestion", URL: "http://data-ingestion:8084"},
+		{Name: "broker-gateway", URL: "http://broker-gateway:8085"},
 		{Name: "indicator-engine", URL: "http://indicator-engine:8086"},
+		{Name: "live-runner", URL: "http://live-runner:8087"},
 		{Name: "backtesting", URL: "http://backtesting:8090"},
+		{Name: "strategy-engine", URL: "http://strategy-engine:8091"},
+		{Name: "portfolio-analytics", URL: "http://portfolio-analytics:8092"},
 	})
 
 	response := service.Health()

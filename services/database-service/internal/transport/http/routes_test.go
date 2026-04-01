@@ -14,9 +14,27 @@ func (stubService) Health() httpcontracts.HealthResponse {
 	return httpcontracts.HealthResponse{Service: "database-service", Status: "ok"}
 }
 
+func (stubService) Ready() httpcontracts.HealthResponse {
+	return httpcontracts.HealthResponse{Service: "database-service", Status: "ok"}
+}
+
 func TestHealthHandler(t *testing.T) {
 	handler := NewHandler(stubService{})
 	req, err := http.NewRequest(http.MethodGet, "/health", nil)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+	resp := httptest.NewRecorder()
+	handler.RegisterRoutes().ServeHTTP(resp, req)
+
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", resp.Code)
+	}
+}
+
+func TestReadyHandler(t *testing.T) {
+	handler := NewHandler(stubService{})
+	req, err := http.NewRequest(http.MethodGet, "/ready", nil)
 	if err != nil {
 		t.Fatalf("request failed: %v", err)
 	}

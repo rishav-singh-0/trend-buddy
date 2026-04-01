@@ -64,6 +64,10 @@ func (s *Service) Health() httpcontracts.HealthResponse {
 	return response
 }
 
+func (s *Service) Ready() httpcontracts.HealthResponse {
+	return health.OK(s.name)
+}
+
 func (s *Service) checkDependency(dependency Dependency) httpcontracts.DependencyHealth {
 	healthURL := dependency.URL + "/health"
 	request, err := http.NewRequest(http.MethodGet, healthURL, nil)

@@ -12,6 +12,15 @@ services:
       - config/generated/dev.env
     ports:
       - "8080:8080"
+    depends_on:
+      - database-service
+      - data-ingestion
+      - broker-gateway
+      - indicator-engine
+      - live-runner
+      - backtesting
+      - strategy-engine
+      - portfolio-analytics
 
   database-service:
     build:
@@ -27,6 +36,35 @@ services:
     volumes:
       - db-data:/app/db
 
+  data-ingestion:
+    build:
+      context: .
+      dockerfile: infra/docker/go-service.Dockerfile
+      args:
+        SERVICE_PATH: services/data-ingestion/cmd/data-ingestion
+        SERVICE_BINARY: data-ingestion
+    env_file:
+      - config/generated/dev.env
+    ports:
+      - "8084:8084"
+    depends_on:
+      - database-service
+      - broker-gateway
+
+  broker-gateway:
+    build:
+      context: .
+      dockerfile: infra/docker/go-service.Dockerfile
+      args:
+        SERVICE_PATH: services/broker-gateway/cmd/broker-gateway
+        SERVICE_BINARY: broker-gateway
+    env_file:
+      - config/generated/dev.env
+    ports:
+      - "8085:8085"
+    depends_on:
+      - database-service
+
   indicator-engine:
     build:
       context: .
@@ -38,6 +76,25 @@ services:
       - config/generated/dev.env
     ports:
       - "8086:8086"
+    depends_on:
+      - database-service
+
+  live-runner:
+    build:
+      context: .
+      dockerfile: infra/docker/go-service.Dockerfile
+      args:
+        SERVICE_PATH: services/live-runner/cmd/live-runner
+        SERVICE_BINARY: live-runner
+    env_file:
+      - config/generated/dev.env
+    ports:
+      - "8087:8087"
+    depends_on:
+      - database-service
+      - data-ingestion
+      - broker-gateway
+      - strategy-engine
 
   backtesting:
     build:
@@ -50,6 +107,38 @@ services:
       - config/generated/dev.env
     ports:
       - "8090:8090"
+    depends_on:
+      - database-service
+      - indicator-engine
+      - strategy-engine
+
+  strategy-engine:
+    build:
+      context: .
+      dockerfile: infra/docker/python-service.Dockerfile
+      args:
+        SERVICE_PACKAGE: trend-buddy-strategy-engine
+        SERVICE_MODULE: strategy_engine.main
+    env_file:
+      - config/generated/dev.env
+    ports:
+      - "8091:8091"
+
+  portfolio-analytics:
+    build:
+      context: .
+      dockerfile: infra/docker/python-service.Dockerfile
+      args:
+        SERVICE_PACKAGE: trend-buddy-portfolio-analytics
+        SERVICE_MODULE: portfolio_analytics.main
+    env_file:
+      - config/generated/dev.env
+    ports:
+      - "8092:8092"
+    depends_on:
+      - database-service
+      - broker-gateway
+      - live-runner
 
   web:
     build:

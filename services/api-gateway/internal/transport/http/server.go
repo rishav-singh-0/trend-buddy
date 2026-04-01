@@ -4,6 +4,7 @@ import httpcontracts "trend-buddy/packages/go/contracts/http"
 
 type Service interface {
 	Health() httpcontracts.HealthResponse
+	Ready() httpcontracts.HealthResponse
 }
 
 type Handler struct {

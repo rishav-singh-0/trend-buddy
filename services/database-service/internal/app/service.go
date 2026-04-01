@@ -2,6 +2,7 @@ package app
 
 import (
 	httpcontracts "trend-buddy/packages/go/contracts/http"
+	"trend-buddy/packages/go/platform/health"
 	"trend-buddy/services/database-service/internal/ports"
 )
 
@@ -25,4 +26,8 @@ func (s *Service) Health() httpcontracts.HealthResponse {
 		Service: s.name,
 		Status:  status,
 	}
+}
+
+func (s *Service) Ready() httpcontracts.HealthResponse {
+	return health.OK(s.name)
 }

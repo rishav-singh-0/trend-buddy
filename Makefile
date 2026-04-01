@@ -30,6 +30,7 @@ test-go:
 	@GOCACHE=$(GOCACHE) go test ./...
 
 test-python:
+	@PYTHONPATH=packages/python/src UV_CACHE_DIR=$(UV_CACHE_DIR) uv run --no-project python -m unittest discover packages/python/tests
 	@PYTHONPATH=packages/python/src:services/backtesting/src UV_CACHE_DIR=$(UV_CACHE_DIR) uv run --no-project python -m unittest discover services/backtesting/tests
 	@PYTHONPATH=packages/python/src:services/strategy-engine/src UV_CACHE_DIR=$(UV_CACHE_DIR) uv run --no-project python -m unittest discover services/strategy-engine/tests
 	@PYTHONPATH=packages/python/src:services/portfolio-analytics/src UV_CACHE_DIR=$(UV_CACHE_DIR) uv run --no-project python -m unittest discover services/portfolio-analytics/tests
